@@ -13,9 +13,16 @@ import { formatCountdown } from '../../utils/time';
 
 interface TiempoProps {
   remainingSeconds: number;
+  totalSeconds: number;
 }
 
-export function Tiempo({ remainingSeconds }: TiempoProps) {
+function getTimerColorClass(remainingSeconds: number, totalSeconds: number): string {
+  if (remainingSeconds <= 300) return 'text-red-500';
+  if (totalSeconds > 0 && remainingSeconds <= totalSeconds / 2) return 'text-orange-400';
+  return 'text-white';
+}
+
+export function Tiempo({ remainingSeconds, totalSeconds }: TiempoProps) {
   // Vibration alerts at 12 and 3 seconds — matches original behavior.
   // Guard: remainingSeconds > 0 ensures no vibration fires when idle (parent passes 0).
   useEffect(() => {
@@ -27,10 +34,11 @@ export function Tiempo({ remainingSeconds }: TiempoProps) {
   }, [remainingSeconds]);
 
   const display = formatCountdown(remainingSeconds);
+  const colorClass = getTimerColorClass(remainingSeconds, totalSeconds);
 
   return (
     <div
-      className="text-8xl md:text-9xl font-mono font-bold tabular-nums text-center"
+      className={`${colorClass} text-8xl md:text-9xl font-mono font-bold tabular-nums text-center`}
       aria-live="polite"
       aria-label={`Tiempo restante: ${display}`}
       role="timer"

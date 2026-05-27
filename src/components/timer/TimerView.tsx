@@ -57,6 +57,9 @@ export function TimerView() {
     timers,
     categorias,
   });
+  const activeTimer = activeTimerId !== null ? timers.find(t => t.idTemporizador === activeTimerId) ?? null : null;
+  const activeCategoria = activeTimer ? categorias.find(c => c.idCategoria === activeTimer.idCategoria) ?? null : null;
+  const totalSeconds = activeCategoria ? activeCategoria.duracion * 60 : 0;
   const [salaName, setSalaName] = useState<string>('');
   const [showSalaPopup, setShowSalaPopup] = useState(idSalaActiva === null);
   const [showMenu, setShowMenu] = useState(false);
@@ -195,7 +198,7 @@ export function TimerView() {
           </p>
         )}
 
-        <Tiempo remainingSeconds={remainingSeconds} />
+        <Tiempo remainingSeconds={remainingSeconds} totalSeconds={totalSeconds} />
 
         {calculatedTimerId === null && idSalaActiva !== null && (
           <p className="text-gray-500 text-sm">Sin eventos en este momento</p>
