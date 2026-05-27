@@ -18,6 +18,29 @@ import { useLogin } from '../../hooks/useAuth';
 import { useAuthStore } from '../../stores/authStore';
 import { socket } from '../../socket';
 import { TimerMenu } from '../timer/TimerMenu';
+import { useThemeStore } from '../../stores/themeStore';
+
+function DarkToggle() {
+  const { isDark, toggle } = useThemeStore();
+  return (
+    <button
+      type="button"
+      onClick={toggle}
+      aria-label={isDark ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
+      className="p-2 rounded-lg text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700 transition-colors"
+    >
+      {isDark ? (
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707M17.657 17.657l-.707-.707M6.343 6.343l-.707-.707M12 7a5 5 0 100 10 5 5 0 000-10z" />
+        </svg>
+      ) : (
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+        </svg>
+      )}
+    </button>
+  );
+}
 
 export function Login() {
   const navigate = useNavigate();
@@ -79,34 +102,37 @@ export function Login() {
   }
 
   return (
-    <main className="min-h-screen flex flex-col bg-gray-50">
+    <main className="min-h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
       {/* Top bar with hamburger */}
-      <header className="flex items-center justify-between px-4 py-3 bg-white border-b border-gray-200">
-        <span className="font-semibold text-gray-800 text-sm">Timers</span>
-        <button
-          type="button"
-          onClick={() => setShowMenu(true)}
-          aria-label="Abrir menú"
-          className="p-2 rounded hover:bg-gray-100 text-gray-600"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-          </svg>
-        </button>
+      <header className="flex items-center justify-between px-4 py-3 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+        <span className="font-semibold text-gray-800 dark:text-gray-100 text-sm">Timers</span>
+        <div className="flex items-center gap-1">
+          <DarkToggle />
+          <button
+            type="button"
+            onClick={() => setShowMenu(true)}
+            aria-label="Abrir menú"
+            className="p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          </button>
+        </div>
       </header>
 
       <TimerMenu isOpen={showMenu} onClose={() => setShowMenu(false)} />
 
       <div className="flex-1 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
-        <h1 className="text-2xl font-bold text-center mb-8 text-gray-800">
+        <h1 className="text-2xl font-bold text-center mb-8 text-gray-800 dark:text-gray-100">
           Timers — Panel de control
         </h1>
 
         {!authenticated ? (
-          <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow p-8 space-y-4">
+          <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-800 rounded-xl shadow p-8 space-y-4">
             <div>
-              <label htmlFor="userName" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="userName" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
                 Usuario
               </label>
               <input
@@ -116,13 +142,13 @@ export function Login() {
                 required
                 value={userName}
                 onChange={(e) => setUserName(e.target.value)}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-400"
                 disabled={isPending}
               />
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
                 Contraseña
               </label>
               <input
@@ -132,7 +158,7 @@ export function Login() {
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-400"
                 disabled={isPending}
               />
             </div>
@@ -146,8 +172,8 @@ export function Login() {
             </button>
           </form>
         ) : (
-          <div className="bg-white rounded-xl shadow p-8 space-y-4 text-center">
-            <p className="text-gray-700">Sesión activa</p>
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-8 space-y-4 text-center">
+            <p className="text-gray-700 dark:text-gray-200">Sesión activa</p>
 
             <button
               type="button"
@@ -160,7 +186,7 @@ export function Login() {
             <button
               type="button"
               onClick={handleSignOut}
-              className="w-full border border-gray-300 text-gray-700 rounded-lg py-2 font-medium hover:bg-gray-50 transition-colors"
+              className="w-full border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 rounded-lg py-2 font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
             >
               Cerrar sesión
             </button>

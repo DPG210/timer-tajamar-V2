@@ -14,6 +14,9 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import './index.css';
 import App from './App';
+import { initTheme } from './stores/themeStore';
+
+initTheme();
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -36,7 +39,7 @@ createRoot(rootElement).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
       <App />
-      {import.meta.env.DEV && <ReactQueryDevtools initialIsOpen={false} />}
+      
     </QueryClientProvider>
   </StrictMode>
 );

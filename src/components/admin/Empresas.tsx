@@ -86,12 +86,12 @@ export function Empresas() {
     );
   }
 
-  if (isLoading) return <div className="p-6 text-gray-500">Cargando empresas…</div>;
+  if (isLoading) return <div className="p-6 text-gray-500 dark:text-gray-400">Cargando empresas…</div>;
   if (isError) return <div className="p-6 text-red-600">Error al cargar las empresas.</div>;
 
   return (
     <div className="p-6 max-w-2xl mx-auto">
-      <h1 className="text-xl font-bold text-gray-800 mb-6">Empresas</h1>
+      <h1 className="text-xl font-bold text-gray-800 dark:text-gray-100 mb-6">Empresas</h1>
 
       <form onSubmit={(e) => void handleCreate(e)} className="flex gap-2 mb-6">
         <input
@@ -100,7 +100,7 @@ export function Empresas() {
           onChange={(e) => setNewName(e.target.value)}
           placeholder="Nombre de nueva empresa"
           required
-          className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="flex-1 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-400"
           disabled={createEmpresa.isPending}
         />
         <button
@@ -116,7 +116,7 @@ export function Empresas() {
         {empresas.map((empresa) => (
           <li
             key={empresa.idEmpresa}
-            className="flex items-center gap-2 p-3 bg-white rounded-lg border border-gray-200"
+            className="flex items-center gap-2 p-3 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700"
           >
             {editId === empresa.idEmpresa ? (
               <>
@@ -124,7 +124,7 @@ export function Empresas() {
                   type="text"
                   value={editName}
                   onChange={(e) => setEditName(e.target.value)}
-                  className="flex-1 border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="flex-1 border border-gray-300 dark:border-gray-600 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-gray-100"
                   autoFocus
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') void handleUpdate(empresa.idEmpresa);
@@ -132,11 +132,11 @@ export function Empresas() {
                   }}
                 />
                 <button type="button" onClick={() => void handleUpdate(empresa.idEmpresa)} className="text-sm text-blue-600 hover:text-blue-800 font-medium">Guardar</button>
-                <button type="button" onClick={() => setEditId(null)} className="text-sm text-gray-500 hover:text-gray-700">Cancelar</button>
+                <button type="button" onClick={() => setEditId(null)} className="text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">Cancelar</button>
               </>
             ) : (
               <>
-                <span className="flex-1 text-sm text-gray-700">{empresa.nombreEmpresa}</span>
+                <span className="flex-1 text-sm text-gray-700 dark:text-gray-200">{empresa.nombreEmpresa}</span>
                 <button type="button" onClick={() => { setEditId(empresa.idEmpresa); setEditName(empresa.nombreEmpresa); }} className="text-sm text-blue-600 hover:text-blue-800" aria-label={`Editar empresa ${empresa.nombreEmpresa}`}>Editar</button>
                 <button type="button" onClick={() => void handleDelete(empresa.idEmpresa, empresa.nombreEmpresa)} className="text-sm text-red-600 hover:text-red-800" aria-label={`Eliminar empresa ${empresa.nombreEmpresa}`} disabled={deleteEmpresa.isPending}>Eliminar</button>
               </>

@@ -26,19 +26,19 @@ export function MenuPopUp({ isOpen, onClose }: MenuPopUpProps) {
         role="dialog"
         aria-modal="true"
         aria-label="Menú de navegación"
-        className="fixed top-0 left-0 h-full w-64 bg-white shadow-xl z-50 overflow-y-auto"
+        className="fixed top-0 left-0 h-full w-64 bg-white dark:bg-gray-800 shadow-xl z-50 overflow-y-auto"
       >
-        <div className="flex items-center justify-between p-4 border-b border-gray-200">
-          <span className="font-semibold text-gray-800">Menú</span>
+        <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+          <span className="font-semibold text-gray-800 dark:text-gray-100">Menú</span>
           <button
             type="button"
             onClick={onClose}
             aria-label="Cerrar menú"
-            className="p-1 rounded hover:bg-gray-100"
+            className="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              className="h-5 w-5 text-gray-500"
+              className="h-5 w-5 text-gray-500 dark:text-gray-400"
               viewBox="0 0 20 20"
               fill="currentColor"
               aria-hidden="true"

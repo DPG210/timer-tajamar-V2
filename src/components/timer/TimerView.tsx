@@ -33,6 +33,7 @@ import { TimerMenu } from './TimerMenu';
 import type { Sala } from '../../types/models';
 import { formatInicio, calcularFin } from '../../utils/time';
 import { nowMadridMinutes } from '../../utils/timezone';
+import logoTajamarTech from '../../assets/logo-tajamar-tech.png';
 
 export function TimerView() {
   // calculatedTimerId is derived from idTemporizador (the same key TES uses as idTimer).
@@ -67,9 +68,11 @@ export function TimerView() {
   }
 
   // M-06: single TES list, filter in memory — no duplicate requests
+  // Guard uses calculatedTimerId (not activeTimerId) so a stale socketTimerId
+  // between events does not keep the last empresa visible.
   const currentEmpresaId =
-    activeTimerId !== null && idSalaActiva !== null
-      ? getEmpresaForActiveTimer(tesList, activeTimerId, idSalaActiva)
+    calculatedTimerId !== null && idSalaActiva !== null
+      ? getEmpresaForActiveTimer(tesList, calculatedTimerId, idSalaActiva)
       : null;
 
   // getEmpresaNombre returns '' when empresas hasn't loaded yet — convert to null
@@ -129,7 +132,12 @@ export function TimerView() {
   const afterNextLine = getLineInfo(afterNextTimer ?? undefined);
 
   return (
-    <main className="min-h-screen bg-gray-900 text-white flex flex-col">
+    <main className="relative isolate min-h-screen bg-gray-900 text-white flex flex-col">
+      <div
+        className="absolute inset-0 -z-10 bg-center bg-no-repeat bg-contain opacity-[0.25] pointer-events-none"
+        style={{ backgroundImage: `url(${logoTajamarTech})` }}
+        aria-hidden="true"
+      />
       {/* Header: [sala selector] | [connection status] | [menu ≡] */}
       <header className="flex items-center justify-between px-6 py-4 bg-gray-800">
         {/* Left: sala selector */}
@@ -181,15 +189,18 @@ export function TimerView() {
 
       {/* Main timer display */}
       <section className="flex-1 flex flex-col items-center justify-center gap-8 px-4">
-        {currentEmpresaNombre && (
+        {calculatedTimerId !== null && currentEmpresaNombre && (
           <p className="text-3xl md:text-4xl font-semibold text-center text-gray-100">
             {currentEmpresaNombre}
           </p>
         )}
-  
+
         <Tiempo remainingSeconds={remainingSeconds} />
 
-        {!currentEmpresaNombre && idSalaActiva !== null && (
+        {calculatedTimerId === null && idSalaActiva !== null && (
+          <p className="text-gray-500 text-sm">Sin eventos en este momento</p>
+        )}
+        {calculatedTimerId !== null && !currentEmpresaNombre && idSalaActiva !== null && (
           <p className="text-gray-500 text-sm">Sin empresa activa en esta sala</p>
         )}
       </section>

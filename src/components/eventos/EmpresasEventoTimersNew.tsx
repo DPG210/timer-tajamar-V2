@@ -12,10 +12,10 @@ function EmpresaCard({ empresa, onClick }: { empresa: Empresa; onClick: () => vo
     <button
       type="button"
       onClick={onClick}
-      className="bg-white border border-gray-200 rounded-xl p-4 text-left hover:shadow-md hover:border-blue-300 transition-all w-full"
+      className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4 text-left hover:shadow-md hover:border-blue-300 dark:hover:border-blue-500 transition-all w-full"
     >
-      <p className="font-semibold text-gray-800 text-sm">{empresa.nombreEmpresa}</p>
-      <p className="text-xs text-blue-600 mt-1">Ver horario →</p>
+      <p className="font-semibold text-gray-800 dark:text-gray-100 text-sm">{empresa.nombreEmpresa}</p>
+      <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">Ver horario →</p>
     </button>
   );
 }
@@ -76,12 +76,12 @@ export function EmpresasEventoTimersNew() {
     });
   }
 
-  if (isLoading) return <div className="p-6 text-gray-500">Cargando empresas…</div>;
+  if (isLoading) return <div className="p-6 text-gray-500 dark:text-gray-400">Cargando empresas…</div>;
   if (isError) return <div className="p-6 text-red-600">Error al cargar las empresas.</div>;
 
   return (
     <div className="p-6 max-w-4xl mx-auto">
-      <h1 className="text-xl font-bold text-gray-800 mb-6">Seguimiento de empresas</h1>
+      <h1 className="text-xl font-bold text-gray-800 dark:text-gray-100 mb-6">Seguimiento de empresas</h1>
 
       {empresas.length === 0 && (
         <p className="text-gray-400 text-sm">No hay empresas con timers asignados.</p>
@@ -99,12 +99,12 @@ export function EmpresasEventoTimersNew() {
 
       {/* Inline panel — keyboard-accessible fallback, updates reactively */}
       {activeEmpresaId !== null && (
-        <div className="bg-white border border-gray-200 rounded-xl p-4">
-          <h2 className="text-sm font-semibold text-gray-700 mb-3">
+        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4">
+          <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-3">
             {empresas.find((e) => e.idEmpresa === activeEmpresaId)?.nombreEmpresa} — Horario actual
           </h2>
 
-          {loadingEventos && <p className="text-gray-500 text-sm">Cargando…</p>}
+          {loadingEventos && <p className="text-gray-500 dark:text-gray-400 text-sm">Cargando…</p>}
 
           {!loadingEventos && eventos.length === 0 && (
             <p className="text-gray-400 text-sm">Sin eventos actuales o próximos.</p>
@@ -113,18 +113,18 @@ export function EmpresasEventoTimersNew() {
           {eventos.length > 0 && (
             <table className="w-full text-xs">
               <thead>
-                <tr className="border-b border-gray-200">
+                <tr className="border-b border-gray-200 dark:border-gray-700">
                   <th className="text-left py-2 text-gray-500 font-medium">Sala</th>
                   <th className="text-left py-2 text-gray-500 font-medium">Inicio</th>
                   <th className="text-left py-2 text-gray-500 font-medium">Fin</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-50">
+              <tbody className="divide-y divide-gray-50 dark:divide-gray-700">
                 {eventos.map((ev, i) => (
                   <tr key={i}>
-                    <td className="py-2 text-gray-700">{ev.sala}</td>
-                    <td className="py-2 text-gray-700">{formatInicio(ev.inicioTimer)}</td>
-                    <td className="py-2 text-gray-500">{calcularFin(ev.inicioTimer, ev.duracion)}</td>
+                    <td className="py-2 text-gray-700 dark:text-gray-200">{ev.sala}</td>
+                    <td className="py-2 text-gray-700 dark:text-gray-200">{formatInicio(ev.inicioTimer)}</td>
+                    <td className="py-2 text-gray-500 dark:text-gray-400">{calcularFin(ev.inicioTimer, ev.duracion)}</td>
                   </tr>
                 ))}
               </tbody>

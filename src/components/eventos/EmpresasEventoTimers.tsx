@@ -26,12 +26,12 @@ export function EmpresasEventoTimers() {
     selectedEmpresa?.idEmpresa ?? null
   );
 
-  if (isLoading) return <div className="p-6 text-gray-500">Cargando empresas…</div>;
+  if (isLoading) return <div className="p-6 text-gray-500 dark:text-gray-400">Cargando empresas…</div>;
   if (isError) return <div className="p-6 text-red-600">Error al cargar las empresas.</div>;
 
   return (
     <div className="p-6 max-w-4xl mx-auto">
-      <h1 className="text-xl font-bold text-gray-800 mb-6">Empresas en el evento</h1>
+      <h1 className="text-xl font-bold text-gray-800 dark:text-gray-100 mb-6">Empresas en el evento</h1>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Empresa list */}
@@ -54,8 +54,8 @@ export function EmpresasEventoTimers() {
                   }
                   className={`w-full text-left px-4 py-3 rounded-lg border transition-colors ${
                     selectedEmpresa?.idEmpresa === empresa.idEmpresa
-                      ? 'bg-blue-50 border-blue-300 text-blue-700'
-                      : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50'
+                      ? 'bg-blue-50 border-blue-300 text-blue-700 dark:bg-blue-900/30 dark:border-blue-500 dark:text-blue-300'
+                      : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-700'
                   }`}
                 >
                   {empresa.nombreEmpresa}
@@ -72,16 +72,16 @@ export function EmpresasEventoTimers() {
               {selectedEmpresa.nombreEmpresa}
             </h2>
 
-            {loadingEventos && <p className="text-gray-500 text-sm">Cargando…</p>}
+            {loadingEventos && <p className="text-gray-500 dark:text-gray-400 text-sm">Cargando…</p>}
 
             {eventosActuales.length > 0 && (
               <div className="mb-4">
                 <h3 className="text-xs font-medium text-gray-400 uppercase mb-2">Actuales y próximos</h3>
                 <div className="space-y-2">
                   {eventosActuales.map((ev, i) => (
-                    <div key={i} className="bg-blue-50 border border-blue-100 rounded-lg p-3">
-                      <p className="font-medium text-blue-800 text-sm">{ev.sala}</p>
-                      <p className="text-blue-600 text-xs">
+                    <div key={i} className="bg-blue-50 border border-blue-100 rounded-lg p-3 dark:bg-blue-900/20 dark:border-blue-800">
+                      <p className="font-medium text-blue-800 dark:text-blue-200 text-sm">{ev.sala}</p>
+                      <p className="text-blue-600 dark:text-blue-300 text-xs">
                         {formatInicio(ev.inicioTimer)} – {calcularFin(ev.inicioTimer, ev.duracion)}
                       </p>
                     </div>
@@ -95,20 +95,20 @@ export function EmpresasEventoTimers() {
                 <h3 className="text-xs font-medium text-gray-400 uppercase mb-2">Todos los turnos</h3>
                 <table className="w-full text-xs">
                   <thead>
-                    <tr className="border-b border-gray-200">
+                    <tr className="border-b border-gray-200 dark:border-gray-700">
                       <th className="text-left py-1.5 text-gray-500 font-medium">Sala</th>
                       <th className="text-left py-1.5 text-gray-500 font-medium">Inicio</th>
                       {/* Bug fix M-11: use duracion directly, not idCategoria lookup */}
                       <th className="text-left py-1.5 text-gray-500 font-medium">Fin</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-50">
+                  <tbody className="divide-y divide-gray-50 dark:divide-gray-700">
                     {todosEventos.map((ev, i) => (
                       <tr key={i}>
-                        <td className="py-1.5 text-gray-700">{ev.sala}</td>
-                        <td className="py-1.5 text-gray-700">{formatInicio(ev.inicioTimer)}</td>
+                        <td className="py-1.5 text-gray-700 dark:text-gray-200">{ev.sala}</td>
+                        <td className="py-1.5 text-gray-700 dark:text-gray-200">{formatInicio(ev.inicioTimer)}</td>
                         {/* Fixed: use ev.duracion directly (original used this.state.categorias which was never loaded) */}
-                        <td className="py-1.5 text-gray-500">{calcularFin(ev.inicioTimer, ev.duracion)}</td>
+                        <td className="py-1.5 text-gray-500 dark:text-gray-400">{calcularFin(ev.inicioTimer, ev.duracion)}</td>
                       </tr>
                     ))}
                   </tbody>

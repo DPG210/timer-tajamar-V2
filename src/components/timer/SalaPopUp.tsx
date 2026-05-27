@@ -26,11 +26,11 @@ export function SalaPopUp({ onSelect, onClose }: SalaPopUpProps) {
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="bg-white rounded-xl shadow-xl w-full max-w-sm p-6">
-        <h2 className="text-lg font-semibold text-gray-800 mb-4">Selecciona una sala</h2>
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-sm p-6">
+        <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">Selecciona una sala</h2>
 
         {isLoading && (
-          <p className="text-gray-500 text-sm text-center py-4">Cargando salas…</p>
+          <p className="text-gray-500 dark:text-gray-400 text-sm text-center py-4">Cargando salas…</p>
         )}
 
         {isError && (
@@ -48,7 +48,7 @@ export function SalaPopUp({ onSelect, onClose }: SalaPopUpProps) {
                   role="option"
                   aria-selected={false}
                   onClick={() => onSelect(sala)}
-                  className="w-full text-left px-4 py-3 rounded-lg border border-gray-200 hover:bg-blue-50 hover:border-blue-300 transition-colors font-medium text-gray-700"
+                  className="w-full text-left px-4 py-3 rounded-lg border border-gray-200 dark:border-gray-600 hover:bg-blue-50 hover:border-blue-300 dark:hover:bg-blue-900/30 dark:hover:border-blue-500 transition-colors font-medium text-gray-700 dark:text-gray-200"
                 >
                   {sala.nombreSala}
                 </button>
@@ -60,7 +60,7 @@ export function SalaPopUp({ onSelect, onClose }: SalaPopUpProps) {
         <button
           type="button"
           onClick={onClose}
-          className="mt-4 w-full text-sm text-gray-500 hover:text-gray-700"
+          className="mt-4 w-full text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
         >
           Cancelar
         </button>

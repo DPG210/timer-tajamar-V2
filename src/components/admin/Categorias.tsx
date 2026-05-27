@@ -143,12 +143,12 @@ export function Categorias() {
     );
   }
 
-  if (isLoading) return <div className="p-6 text-gray-500">Cargando categorías…</div>;
+  if (isLoading) return <div className="p-6 text-gray-500 dark:text-gray-400">Cargando categorías…</div>;
   if (isError) return <div className="p-6 text-red-600">Error al cargar las categorías.</div>;
 
   return (
     <div className="p-6 max-w-2xl mx-auto">
-      <h1 className="text-xl font-bold text-gray-800 mb-6">Categorías</h1>
+      <h1 className="text-xl font-bold text-gray-800 dark:text-gray-100 mb-6">Categorías</h1>
 
       <form onSubmit={(e) => void handleCreate(e)} className="flex gap-2 mb-6">
         <input
@@ -157,7 +157,7 @@ export function Categorias() {
           onChange={(e) => setNewNombre(e.target.value)}
           placeholder="Nombre de categoría"
           required
-          className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="flex-1 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-400"
         />
         <input
           type="time"
@@ -165,7 +165,7 @@ export function Categorias() {
           onChange={(e) => setNewDuracion(e.target.value)}
           required
           step="60"
-          className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-gray-100"
           aria-label="Duración (HH:MM)"
         />
         <button
@@ -179,14 +179,14 @@ export function Categorias() {
 
       <ul className="space-y-2">
         {categorias.map((cat) => (
-          <li key={cat.idCategoria} className="p-3 bg-white rounded-lg border border-gray-200">
+          <li key={cat.idCategoria} className="p-3 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
             {editId === cat.idCategoria ? (
               <div className="flex items-center gap-2">
                 <input
                   type="text"
                   value={editNombre}
                   onChange={(e) => setEditNombre(e.target.value)}
-                  className="flex-1 border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="flex-1 border border-gray-300 dark:border-gray-600 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-gray-100"
                   autoFocus
                 />
                 <input
@@ -194,14 +194,14 @@ export function Categorias() {
                   value={editDuracion}
                   onChange={(e) => setEditDuracion(e.target.value)}
                   step="60"
-                  className="border border-gray-300 rounded px-2 py-1 text-sm"
+                  className="border border-gray-300 dark:border-gray-600 rounded px-2 py-1 text-sm dark:bg-gray-700 dark:text-gray-100"
                 />
                 <button type="button" onClick={() => void handleUpdate(cat.idCategoria)} className="text-sm text-blue-600 hover:text-blue-800 font-medium">Guardar</button>
-                <button type="button" onClick={() => setEditId(null)} className="text-sm text-gray-500">Cancelar</button>
+                <button type="button" onClick={() => setEditId(null)} className="text-sm text-gray-500 dark:text-gray-400 dark:hover:text-gray-200">Cancelar</button>
               </div>
             ) : (
               <div className="flex items-center gap-2">
-                <span className="flex-1 text-sm text-gray-700 font-medium">{cat.categoria}</span>
+                <span className="flex-1 text-sm text-gray-700 dark:text-gray-200 font-medium">{cat.categoria}</span>
                 <span className="text-xs text-gray-400">{transformDuration(cat.duracion)}</span>
                 <button type="button" onClick={() => startEdit(cat)} className="text-sm text-blue-600 hover:text-blue-800" aria-label={`Editar categoría ${cat.categoria}`}>Editar</button>
                 <button type="button" onClick={() => void handleDelete(cat.idCategoria, cat.categoria)} className="text-sm text-red-600 hover:text-red-800" aria-label={`Eliminar categoría ${cat.categoria}`} disabled={deleteCategoria.isPending}>Eliminar</button>

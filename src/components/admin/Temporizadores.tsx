@@ -111,22 +111,22 @@ export function Temporizadores() {
     );
   }
 
-  if (isLoading) return <div className="p-6 text-gray-500">Cargando temporizadores…</div>;
+  if (isLoading) return <div className="p-6 text-gray-500 dark:text-gray-400">Cargando temporizadores…</div>;
   if (isError) return <div className="p-6 text-red-600">Error al cargar los temporizadores.</div>;
 
   return (
     <div className="p-6 max-w-3xl mx-auto">
-      <h1 className="text-xl font-bold text-gray-800 mb-6">Temporizadores</h1>
+      <h1 className="text-xl font-bold text-gray-800 dark:text-gray-100 mb-6">Temporizadores</h1>
 
       {/* Create form */}
-      <form onSubmit={(e) => void handleCreate(e)} className="bg-white border border-gray-200 rounded-xl p-4 mb-6 flex flex-wrap gap-2 items-end">
+      <form onSubmit={(e) => void handleCreate(e)} className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4 mb-6 flex flex-wrap gap-2 items-end">
         <div>
           <label className="block text-xs text-gray-500 mb-1">Fecha</label>
-          <input type="date" value={newDate} onChange={(e) => setNewDate(e.target.value)} required className="border border-gray-300 rounded px-2 py-1.5 text-sm" />
+          <input type="date" value={newDate} onChange={(e) => setNewDate(e.target.value)} required className="border border-gray-300 dark:border-gray-600 rounded px-2 py-1.5 text-sm dark:bg-gray-700 dark:text-gray-100" />
         </div>
         <div>
           <label className="block text-xs text-gray-500 mb-1">Hora inicio</label>
-          <input type="time" value={newTime} onChange={(e) => setNewTime(e.target.value)} required step="60" className="border border-gray-300 rounded px-2 py-1.5 text-sm" />
+          <input type="time" value={newTime} onChange={(e) => setNewTime(e.target.value)} required step="60" className="border border-gray-300 dark:border-gray-600 rounded px-2 py-1.5 text-sm dark:bg-gray-700 dark:text-gray-100" />
         </div>
         <div>
           <label className="block text-xs text-gray-500 mb-1">Categoría</label>
@@ -134,7 +134,7 @@ export function Temporizadores() {
             value={newCategoriaId}
             onChange={(e) => setNewCategoriaId(Number(e.target.value))}
             required
-            className="border border-gray-300 rounded px-2 py-1.5 text-sm"
+            className="border border-gray-300 dark:border-gray-600 rounded px-2 py-1.5 text-sm dark:bg-gray-700 dark:text-gray-100"
           >
             {categorias.map((c) => (
               <option key={c.idCategoria} value={c.idCategoria}>{c.categoria}</option>
@@ -147,9 +147,9 @@ export function Temporizadores() {
       </form>
 
       {/* Table */}
-      <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden">
         <table className="w-full text-sm">
-          <thead className="bg-gray-50 border-b border-gray-200">
+          <thead className="bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
             <tr>
               <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">Inicio</th>
               <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">Fin</th>
@@ -157,7 +157,7 @@ export function Temporizadores() {
               <th className="px-4 py-3"></th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-100">
+          <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
             {timers.map((timer) => {
               const cat = categorias.find((c) => c.idCategoria === timer.idCategoria);
               const fin = cat ? calcularFin(timer.inicio, cat.duracion) : '??:??';
@@ -167,25 +167,25 @@ export function Temporizadores() {
                     <>
                       <td className="px-4 py-2" colSpan={2}>
                         <div className="flex gap-2">
-                          <input type="date" value={editDate} onChange={(e) => setEditDate(e.target.value)} className="border border-gray-300 rounded px-2 py-1 text-xs" />
-                          <input type="time" value={editTime} onChange={(e) => setEditTime(e.target.value)} step="60" className="border border-gray-300 rounded px-2 py-1 text-xs" />
+                          <input type="date" value={editDate} onChange={(e) => setEditDate(e.target.value)} className="border border-gray-300 dark:border-gray-600 rounded px-2 py-1 text-xs dark:bg-gray-700 dark:text-gray-100" />
+                          <input type="time" value={editTime} onChange={(e) => setEditTime(e.target.value)} step="60" className="border border-gray-300 dark:border-gray-600 rounded px-2 py-1 text-xs dark:bg-gray-700 dark:text-gray-100" />
                         </div>
                       </td>
                       <td className="px-4 py-2">
-                        <select value={editCategoriaId} onChange={(e) => setEditCategoriaId(Number(e.target.value))} className="border border-gray-300 rounded px-2 py-1 text-xs">
+                        <select value={editCategoriaId} onChange={(e) => setEditCategoriaId(Number(e.target.value))} className="border border-gray-300 dark:border-gray-600 rounded px-2 py-1 text-xs dark:bg-gray-700 dark:text-gray-100">
                           {categorias.map((c) => <option key={c.idCategoria} value={c.idCategoria}>{c.categoria}</option>)}
                         </select>
                       </td>
                       <td className="px-4 py-2 text-right space-x-2">
                         <button type="button" onClick={() => void handleUpdate(timer.idTemporizador)} className="text-blue-600 hover:text-blue-800 text-xs font-medium">Guardar</button>
-                        <button type="button" onClick={() => setEditId(null)} className="text-gray-500 hover:text-gray-700 text-xs">Cancelar</button>
+                        <button type="button" onClick={() => setEditId(null)} className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 text-xs">Cancelar</button>
                       </td>
                     </>
                   ) : (
                     <>
-                      <td className="px-4 py-3 text-gray-700">{formatInicio(timer.inicio)}</td>
-                      <td className="px-4 py-3 text-gray-500">{fin}</td>
-                      <td className="px-4 py-3 text-gray-700">{getCategoriaNombre(categorias, timer.idCategoria)}</td>
+                      <td className="px-4 py-3 text-gray-700 dark:text-gray-200">{formatInicio(timer.inicio)}</td>
+                      <td className="px-4 py-3 text-gray-500 dark:text-gray-400">{fin}</td>
+                      <td className="px-4 py-3 text-gray-700 dark:text-gray-200">{getCategoriaNombre(categorias, timer.idCategoria)}</td>
                       <td className="px-4 py-3 text-right space-x-2">
                         <button type="button" onClick={() => startEdit(timer)} className="text-blue-600 hover:text-blue-800 text-xs">Editar</button>
                         <button type="button" onClick={() => void handleDelete(timer.idTemporizador)} className="text-red-600 hover:text-red-800 text-xs" disabled={deleteTimer.isPending}>Eliminar</button>
