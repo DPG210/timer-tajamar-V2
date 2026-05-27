@@ -1,0 +1,236 @@
+/**
+ * TimerView — main timer display page.
+ * Migrated from TimerView.js (class component).
+ *
+ * Resolves:
+ *   M-03: socket singleton via useTimerSocket
+ *   M-06: TES fetched once, filtered in memory
+ *   M-10: functional component with hooks
+ *
+ * Fix — activeTimerId priority:
+ *   calculatedTimerId (from REST timers+categorias, uses idTemporizador) takes priority
+ *   because TES records use idTimer = FK(idTemporizador). socketTimerId is used only
+ *   as last resort on initial mount before the time-based calculation resolves.
+ *
+ * Accessible:
+ *   - Landmark regions (main, header)
+ *   - Live region for timer updates
+ *   - Keyboard-accessible sala selector button
+ */
+
+import { useState, useEffect } from 'react';
+import { useTimerSocket } from '../../hooks/useTimerSocket';
+import { useCurrentActiveTimer } from '../../hooks/useCurrentActiveTimer';
+import { useCalculatedRemainingSeconds } from '../../hooks/useCalculatedRemainingSeconds';
+import { useTES, getEmpresaForActiveTimer, getLineEmpresaId } from '../../hooks/useTES';
+import { useTimers } from '../../hooks/useTimers';
+import { useEmpresas, getEmpresaNombre } from '../../hooks/useEmpresas';
+import { useCategorias, getCategoriaNombre } from '../../hooks/useCategorias';
+import { useUiStore } from '../../stores/uiStore';
+import { Tiempo } from './Tiempo';
+import { SalaPopUp } from './SalaPopUp';
+import { TimerMenu } from './TimerMenu';
+import type { Sala } from '../../types/models';
+import { formatInicio, calcularFin } from '../../utils/time';
+import { nowMadridMinutes } from '../../utils/timezone';
+
+export function TimerView() {
+  // calculatedTimerId is derived from idTemporizador (the same key TES uses as idTimer).
+  // socketTimerId may carry a different ID scheme from the backend — use it only as
+  // a last resort when calculatedTimerId hasn't resolved yet (initial mount, no timers).
+  const { activeTimerId: socketTimerId, isConnected } = useTimerSocket();
+  const calculatedTimerId = useCurrentActiveTimer();
+  const activeTimerId = calculatedTimerId ?? socketTimerId;
+
+  const { data: tesList = [] } = useTES();
+  const { data: timers = [] } = useTimers();
+  const { data: empresas = [] } = useEmpresas();
+  const { data: categorias = [] } = useCategorias();
+  const { idSalaActiva, setIdSalaActiva } = useUiStore();
+
+  // Remaining seconds derived from scheduled inicio + duracion, recalculated
+  // every second client-side. Replaces the unreliable socket "envio" countdown
+  // which counted from "vamos" (operator action) rather than the scheduled start.
+  const remainingSeconds = useCalculatedRemainingSeconds({
+    activeTimerId,
+    timers,
+    categorias,
+  });
+  const [salaName, setSalaName] = useState<string>('');
+  const [showSalaPopup, setShowSalaPopup] = useState(idSalaActiva === null);
+  const [showMenu, setShowMenu] = useState(false);
+
+  function handleSalaSelect(sala: Sala) {
+    setIdSalaActiva(sala.idSala);
+    setSalaName(sala.nombreSala);
+    setShowSalaPopup(false);
+  }
+
+  // M-06: single TES list, filter in memory — no duplicate requests
+  const currentEmpresaId =
+    activeTimerId !== null && idSalaActiva !== null
+      ? getEmpresaForActiveTimer(tesList, activeTimerId, idSalaActiva)
+      : null;
+
+  // getEmpresaNombre returns '' when empresas hasn't loaded yet — convert to null
+  // so the conditional render doesn't treat a loading state as "no empresa".
+  const currentEmpresaNombre =
+    currentEmpresaId != null
+      ? (getEmpresaNombre(empresas, currentEmpresaId) || null)
+      : null;
+
+  // DEBUG — remove before production
+  useEffect(() => {
+    const nowMinutes = nowMadridMinutes();
+    const tesTimerIds = [...new Set(tesList.map(t => t.idTimer))].sort((a, b) => a - b).join(', ');
+    const allTimerIds = timers.map(t => t.idTemporizador).join(', ');
+
+    console.group('[TimerView] debug');
+    console.log(`hora: ${nowMinutes.toFixed(2)} min | socketTimerId: ${socketTimerId} | calculatedTimerId: ${calculatedTimerId} | activeTimerId (calculado??socket): ${activeTimerId} | remainingSeconds (calculado): ${remainingSeconds.toFixed(0)}`);
+    console.log(`idSalaActiva: ${idSalaActiva} | currentEmpresaId: ${currentEmpresaId} | currentEmpresaNombre: ${currentEmpresaNombre ?? '(null)'}`);
+    console.log(`timers idTemporizador: [${allTimerIds}]`);
+    console.log(`TES idTimer values (${tesList.length} registros): [${tesTimerIds}]`);
+    console.log('TES[0]:', JSON.stringify(tesList[0]));
+    console.log('TES[1]:', JSON.stringify(tesList[1]));
+
+    if (activeTimerId !== null) {
+      const forActive = tesList.filter(t => t.idTimer === activeTimerId);
+      console.log(`TES para activeTimerId=${activeTimerId}:`, JSON.stringify(forActive));
+    }
+    if (socketTimerId !== null && socketTimerId !== activeTimerId) {
+      const forSocket = tesList.filter(t => t.idTimer === socketTimerId);
+      console.log(`TES para socketTimerId=${socketTimerId} (NO usado):`, JSON.stringify(forSocket));
+    }
+    console.groupEnd();
+  }, [socketTimerId, calculatedTimerId, activeTimerId, remainingSeconds, idSalaActiva, timers, tesList, currentEmpresaId, currentEmpresaNombre]);
+
+  // Find next and after-next timers in this sala
+  const sortedTimers = [...timers];
+  const currentTimerIndex = activeTimerId
+    ? sortedTimers.findIndex((t) => t.idTemporizador === activeTimerId)
+    : -1;
+
+  const nextTimer = currentTimerIndex >= 0 ? sortedTimers[currentTimerIndex + 1] : null;
+  const afterNextTimer =
+    currentTimerIndex >= 0 ? sortedTimers[currentTimerIndex + 2] : null;
+
+  function getLineInfo(timer: { idTemporizador: number; inicio: string; idCategoria: number } | undefined) {
+    if (!timer || idSalaActiva === null) return null;
+    const empresaId = getLineEmpresaId(tesList, timer.idTemporizador, idSalaActiva);
+    if (!empresaId) return null;
+    const nombre = getEmpresaNombre(empresas, empresaId);
+    const categoriaNombre = getCategoriaNombre(categorias, timer.idCategoria);
+    const categoria = categorias.find((c) => c.idCategoria === timer.idCategoria);
+    const fin = categoria ? calcularFin(timer.inicio, categoria.duracion) : '??:??';
+    return { nombre, categoriaNombre, inicio: formatInicio(timer.inicio), fin };
+  }
+
+  const nextLine = getLineInfo(nextTimer ?? undefined);
+  const afterNextLine = getLineInfo(afterNextTimer ?? undefined);
+
+  return (
+    <main className="min-h-screen bg-gray-900 text-white flex flex-col">
+      {/* Header: [sala selector] | [connection status] | [menu ≡] */}
+      <header className="flex items-center justify-between px-6 py-4 bg-gray-800">
+        {/* Left: sala selector */}
+        <button
+          type="button"
+          onClick={() => setShowSalaPopup(true)}
+          className="text-sm font-medium text-blue-300 hover:text-blue-100 transition-colors"
+          aria-label={`Sala activa: ${salaName || 'Sin sala seleccionada'}. Pulsa para cambiar.`}
+        >
+          {salaName || 'Seleccionar sala'}
+        </button>
+
+        {/* Center: connection status */}
+        <span
+          className={`text-xs px-2 py-1 rounded-full ${
+            isConnected ? 'bg-green-700 text-green-100' : 'bg-red-700 text-red-100'
+          }`}
+          aria-live="polite"
+        >
+          {isConnected ? 'Conectado' : 'Desconectado'}
+        </span>
+
+        {/* Right: hamburger menu — visible for all users */}
+        <button
+          type="button"
+          onClick={() => setShowMenu(true)}
+          className="rounded p-1 text-gray-400 hover:text-white hover:bg-gray-700 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
+          aria-label="Abrir menú de navegación"
+          aria-haspopup="dialog"
+          aria-expanded={showMenu}
+        >
+          {/* Hamburger icon */}
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-5 w-5"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth={2}
+            aria-hidden="true"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+        </button>
+      </header>
+
+      {/* Navigation drawer — all users */}
+      <TimerMenu isOpen={showMenu} onClose={() => setShowMenu(false)} />
+
+      {/* Main timer display */}
+      <section className="flex-1 flex flex-col items-center justify-center gap-8 px-4">
+        {currentEmpresaNombre && (
+          <p className="text-3xl md:text-4xl font-semibold text-center text-gray-100">
+            {currentEmpresaNombre}
+          </p>
+        )}
+  
+        <Tiempo remainingSeconds={remainingSeconds} />
+
+        {!currentEmpresaNombre && idSalaActiva !== null && (
+          <p className="text-gray-500 text-sm">Sin empresa activa en esta sala</p>
+        )}
+      </section>
+
+      {/* Upcoming timers */}
+      {(nextLine || afterNextLine) && (
+        <section
+          aria-label="Próximos turnos"
+          className="bg-gray-800 px-6 py-4 space-y-2"
+        >
+          <h2 className="text-xs uppercase tracking-wider text-gray-400 mb-3">
+            Próximos turnos
+          </h2>
+          {nextLine && (
+            <div className="flex justify-between items-center text-sm">
+              <span className="font-medium text-gray-100">{nextLine.nombre}</span>
+              <span className="text-gray-400">
+                {nextLine.inicio} – {nextLine.fin} · {nextLine.categoriaNombre}
+              </span>
+            </div>
+          )}
+          {afterNextLine && (
+            <div className="flex justify-between items-center text-sm text-gray-400">
+              <span>{afterNextLine.nombre}</span>
+              <span>
+                {afterNextLine.inicio} – {afterNextLine.fin} · {afterNextLine.categoriaNombre}
+              </span>
+            </div>
+          )}
+        </section>
+      )}
+
+      {/* Sala selector modal */}
+      {showSalaPopup && (
+        <SalaPopUp
+          onSelect={handleSalaSelect}
+          onClose={() => {
+            if (idSalaActiva !== null) setShowSalaPopup(false);
+          }}
+        />
+      )}
+    </main>
+  );
+}
