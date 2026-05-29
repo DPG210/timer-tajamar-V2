@@ -56,7 +56,16 @@ export function computeRemainingSeconds(
   const { hours, minutes } = parseInicio(timer.inicio);
   const startMinutes = hours * 60 + minutes;
   const endMinutes = startMinutes + categoria.duracion;
-  const remainingMinutes = endMinutes - nowMinutes;
+
+  // If timer crosses midnight and now is in the post-midnight window,
+  // shift nowMinutes forward by a day so subtraction gives correct remaining time.
+  const MINUTES_IN_DAY = 1440;
+  const adjustedNow =
+    endMinutes > MINUTES_IN_DAY && nowMinutes < endMinutes - MINUTES_IN_DAY
+      ? nowMinutes + MINUTES_IN_DAY
+      : nowMinutes;
+
+  const remainingMinutes = endMinutes - adjustedNow;
   return Math.max(0, remainingMinutes * 60);
 }
 

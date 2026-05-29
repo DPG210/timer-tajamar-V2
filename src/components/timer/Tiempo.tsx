@@ -17,8 +17,9 @@ interface TiempoProps {
 }
 
 function getTimerColorClass(remainingSeconds: number, totalSeconds: number): string {
+  if (totalSeconds === 0) return 'text-white';
   if (remainingSeconds <= 300) return 'text-red-500';
-  if (totalSeconds > 0 && remainingSeconds <= totalSeconds / 2) return 'text-orange-400';
+  if (remainingSeconds <= totalSeconds / 2) return 'text-orange-400';
   return 'text-white';
 }
 

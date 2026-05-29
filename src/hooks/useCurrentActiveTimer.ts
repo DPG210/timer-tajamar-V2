@@ -39,7 +39,13 @@ export function useCurrentActiveTimer(): number | null {
       const startMinutes = hours * 60 + minutes;
       const endMinutes = startMinutes + categoria.duracion;
 
-      if (nowMinutes >= startMinutes && nowMinutes < endMinutes) {
+      const MINUTES_IN_DAY = 1440;
+      const crossesMidnight = endMinutes > MINUTES_IN_DAY;
+      const isActive = crossesMidnight
+        ? nowMinutes >= startMinutes || nowMinutes < endMinutes - MINUTES_IN_DAY
+        : nowMinutes >= startMinutes && nowMinutes < endMinutes;
+
+      if (isActive) {
         return timer.idTemporizador;
       }
     }

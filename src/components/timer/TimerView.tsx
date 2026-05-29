@@ -114,7 +114,7 @@ export function TimerView() {
   return (
     <main className="relative isolate min-h-screen bg-gray-900 text-white flex flex-col">
       <div
-        className="absolute inset-0 -z-10 bg-center bg-no-repeat bg-contain opacity-[0.25] pointer-events-none"
+        className="absolute inset-0 -z-10 bg-center bg-no-repeat bg-contain opacity-[0.75] pointer-events-none"
         style={{ backgroundImage: `url(${logoTajamarTech})` }}
         aria-hidden="true"
       />
