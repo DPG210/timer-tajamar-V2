@@ -15,6 +15,8 @@ import { useAuthStore } from '../../stores/authStore';
 interface TimerMenuProps {
   isOpen: boolean;
   onClose: () => void;
+  /** Stable id forwarded from the hamburger button's aria-controls (L-05). */
+  id?: string;
 }
 
 const baseLink =
@@ -26,9 +28,8 @@ function linkClass({ isActive }: { isActive: boolean }): string {
   return isActive ? activeLink : baseLink;
 }
 
-export function TimerMenu({ isOpen, onClose }: TimerMenuProps) {
-  const { isAuthenticated } = useAuthStore();
-  const auth = isAuthenticated();
+export function TimerMenu({ isOpen, onClose, id }: TimerMenuProps) {
+  const { isAuthenticated: auth } = useAuthStore();
   const panelRef = useRef<HTMLDivElement>(null);
 
   // Close on Escape
@@ -53,6 +54,7 @@ export function TimerMenu({ isOpen, onClose }: TimerMenuProps) {
   return (
     // Overlay
     <div
+      id={id}
       className="fixed inset-0 z-50 flex justify-end"
       role="dialog"
       aria-modal="true"

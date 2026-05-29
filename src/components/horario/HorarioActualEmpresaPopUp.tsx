@@ -54,7 +54,7 @@ export function HorarioActualEmpresaPopUp({
             </thead>
             <tbody className="divide-y divide-gray-50 dark:divide-gray-700">
               {eventos.map((evento, i) => (
-                <tr key={i}>
+                <tr key={`${evento.sala}-${evento.inicioTimer}-${i}`}>
                   <td className="py-2 text-gray-700 dark:text-gray-200">{evento.sala}</td>
                   <td className="py-2 text-gray-700 dark:text-gray-200">{formatInicio(evento.inicioTimer)}</td>
                   <td className="py-2 text-gray-500 dark:text-gray-400">{calcularFin(evento.inicioTimer, evento.duracion)}</td>

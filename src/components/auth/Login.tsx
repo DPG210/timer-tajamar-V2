@@ -5,48 +5,30 @@
  *   M-08: Swal lives here (component), not in service layer
  *   M-02: errors from useLogin() propagate correctly
  *   M-auth: clearToken uses removeItem, not localStorage.clear()
+ *   L-01: DarkToggle imported from shared component (no local copy).
+ *   L-05: hamburger button wired with aria-controls and aria-expanded.
  *
  * socket emit "vamos" is also here (Start Event button).
  * socket emit "start" (emergency reset) is intentionally NOT exposed in UI (PRD: WONT).
  */
 
 import { useState } from 'react';
-import { useNavigate } from 'react-router';
+import { useNavigate, useSearchParams } from 'react-router';
 import Swal from 'sweetalert2';
 import axios from 'axios';
 import { useLogin } from '../../hooks/useAuth';
 import { useAuthStore } from '../../stores/authStore';
 import { socket } from '../../socket';
 import { TimerMenu } from '../timer/TimerMenu';
-import { useThemeStore } from '../../stores/themeStore';
+import { DarkToggle } from '../layout/DarkToggle';
 
-function DarkToggle() {
-  const { isDark, toggle } = useThemeStore();
-  return (
-    <button
-      type="button"
-      onClick={toggle}
-      aria-label={isDark ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
-      className="p-2 rounded-lg text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700 transition-colors"
-    >
-      {isDark ? (
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707M17.657 17.657l-.707-.707M6.343 6.343l-.707-.707M12 7a5 5 0 100 10 5 5 0 000-10z" />
-        </svg>
-      ) : (
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
-        </svg>
-      )}
-    </button>
-  );
-}
+const LOGIN_TIMER_MENU_ID = 'login-timer-menu';
 
 export function Login() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { mutate: login, isPending } = useLogin();
-  const { isAuthenticated, clearToken } = useAuthStore();
-  const authenticated = isAuthenticated();
+  const { isAuthenticated: authenticated, clearToken } = useAuthStore();
 
   const [userName, setUserName] = useState('');
   const [password, setPassword] = useState('');
@@ -58,7 +40,8 @@ export function Login() {
       { userName, password },
       {
         onSuccess: () => {
-          void navigate('/horario');
+          const next = searchParams.get('next') ?? '/horario';
+          void navigate(next);
         },
         onError: (error) => {
           // M-08: Swal in component, not in service
@@ -112,6 +95,8 @@ export function Login() {
             type="button"
             onClick={() => setShowMenu(true)}
             aria-label="Abrir menú"
+            aria-controls={LOGIN_TIMER_MENU_ID}
+            aria-expanded={showMenu}
             className="p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400"
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
@@ -121,7 +106,7 @@ export function Login() {
         </div>
       </header>
 
-      <TimerMenu isOpen={showMenu} onClose={() => setShowMenu(false)} />
+      <TimerMenu id={LOGIN_TIMER_MENU_ID} isOpen={showMenu} onClose={() => setShowMenu(false)} />
 
       <div className="flex-1 flex items-center justify-center p-4">
       <div className="w-full max-w-md">

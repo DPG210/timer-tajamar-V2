@@ -18,36 +18,39 @@
  *   - Keyboard-accessible sala selector button
  */
 
-import { useState, useEffect } from 'react';
-import { useTimerSocket } from '../../hooks/useTimerSocket';
+import { useState } from 'react';
+import { useTimerSocketStore } from '../../stores/timerSocketStore';
 import { useCurrentActiveTimer } from '../../hooks/useCurrentActiveTimer';
 import { useCalculatedRemainingSeconds } from '../../hooks/useCalculatedRemainingSeconds';
-import { useTES, getEmpresaForActiveTimer, getLineEmpresaId } from '../../hooks/useTES';
+import { useTES, getEmpresaForActiveTimer } from '../../hooks/useTES';
 import { useTimers } from '../../hooks/useTimers';
 import { useEmpresas, getEmpresaNombre } from '../../hooks/useEmpresas';
 import { useCategorias, getCategoriaNombre } from '../../hooks/useCategorias';
+import { useSalas } from '../../hooks/useSalas';
 import { useUiStore } from '../../stores/uiStore';
 import { Tiempo } from './Tiempo';
 import { SalaPopUp } from './SalaPopUp';
 import { TimerMenu } from './TimerMenu';
 import type { Sala } from '../../types/models';
 import { formatInicio, calcularFin } from '../../utils/time';
-import { nowMadridMinutes } from '../../utils/timezone';
 import logoTajamarTech from '../../assets/logo-tajamar-tech.png';
 
 export function TimerView() {
   // calculatedTimerId is derived from idTemporizador (the same key TES uses as idTimer).
   // socketTimerId may carry a different ID scheme from the backend — use it only as
   // a last resort when calculatedTimerId hasn't resolved yet (initial mount, no timers).
-  const { activeTimerId: socketTimerId, isConnected } = useTimerSocket();
+  const { activeTimerId: socketTimerId, isConnected } = useTimerSocketStore();
   const calculatedTimerId = useCurrentActiveTimer();
   const activeTimerId = calculatedTimerId ?? socketTimerId;
 
   const { data: tesList = [] } = useTES();
-  const { data: timers = [] } = useTimers();
+  const { data: timers = [], isLoading: timersLoading } = useTimers();
   const { data: empresas = [] } = useEmpresas();
-  const { data: categorias = [] } = useCategorias();
+  const { data: categorias = [], isLoading: categoriasLoading } = useCategorias();
+  const { data: salas = [] } = useSalas();
   const { idSalaActiva, setIdSalaActiva } = useUiStore();
+
+  const isTimerDataLoading = timersLoading || categoriasLoading;
 
   // Remaining seconds derived from scheduled inicio + duracion, recalculated
   // every second client-side. Replaces the unreliable socket "envio" countdown
@@ -60,13 +63,12 @@ export function TimerView() {
   const activeTimer = activeTimerId !== null ? timers.find(t => t.idTemporizador === activeTimerId) ?? null : null;
   const activeCategoria = activeTimer ? categorias.find(c => c.idCategoria === activeTimer.idCategoria) ?? null : null;
   const totalSeconds = activeCategoria ? activeCategoria.duracion * 60 : 0;
-  const [salaName, setSalaName] = useState<string>('');
+  const salaName = salas.find(s => s.idSala === idSalaActiva)?.nombreSala ?? '';
   const [showSalaPopup, setShowSalaPopup] = useState(idSalaActiva === null);
   const [showMenu, setShowMenu] = useState(false);
 
   function handleSalaSelect(sala: Sala) {
     setIdSalaActiva(sala.idSala);
-    setSalaName(sala.nombreSala);
     setShowSalaPopup(false);
   }
 
@@ -85,31 +87,6 @@ export function TimerView() {
       ? (getEmpresaNombre(empresas, currentEmpresaId) || null)
       : null;
 
-  // DEBUG — remove before production
-  useEffect(() => {
-    const nowMinutes = nowMadridMinutes();
-    const tesTimerIds = [...new Set(tesList.map(t => t.idTimer))].sort((a, b) => a - b).join(', ');
-    const allTimerIds = timers.map(t => t.idTemporizador).join(', ');
-
-    console.group('[TimerView] debug');
-    console.log(`hora: ${nowMinutes.toFixed(2)} min | socketTimerId: ${socketTimerId} | calculatedTimerId: ${calculatedTimerId} | activeTimerId (calculado??socket): ${activeTimerId} | remainingSeconds (calculado): ${remainingSeconds.toFixed(0)}`);
-    console.log(`idSalaActiva: ${idSalaActiva} | currentEmpresaId: ${currentEmpresaId} | currentEmpresaNombre: ${currentEmpresaNombre ?? '(null)'}`);
-    console.log(`timers idTemporizador: [${allTimerIds}]`);
-    console.log(`TES idTimer values (${tesList.length} registros): [${tesTimerIds}]`);
-    console.log('TES[0]:', JSON.stringify(tesList[0]));
-    console.log('TES[1]:', JSON.stringify(tesList[1]));
-
-    if (activeTimerId !== null) {
-      const forActive = tesList.filter(t => t.idTimer === activeTimerId);
-      console.log(`TES para activeTimerId=${activeTimerId}:`, JSON.stringify(forActive));
-    }
-    if (socketTimerId !== null && socketTimerId !== activeTimerId) {
-      const forSocket = tesList.filter(t => t.idTimer === socketTimerId);
-      console.log(`TES para socketTimerId=${socketTimerId} (NO usado):`, JSON.stringify(forSocket));
-    }
-    console.groupEnd();
-  }, [socketTimerId, calculatedTimerId, activeTimerId, remainingSeconds, idSalaActiva, timers, tesList, currentEmpresaId, currentEmpresaNombre]);
-
   // Find next and after-next timers in this sala
   const sortedTimers = [...timers];
   const currentTimerIndex = activeTimerId
@@ -122,7 +99,7 @@ export function TimerView() {
 
   function getLineInfo(timer: { idTemporizador: number; inicio: string; idCategoria: number } | undefined) {
     if (!timer || idSalaActiva === null) return null;
-    const empresaId = getLineEmpresaId(tesList, timer.idTemporizador, idSalaActiva);
+    const empresaId = getEmpresaForActiveTimer(tesList, timer.idTemporizador, idSalaActiva);
     if (!empresaId) return null;
     const nombre = getEmpresaNombre(empresas, empresaId);
     const categoriaNombre = getCategoriaNombre(categorias, timer.idCategoria);
@@ -170,6 +147,7 @@ export function TimerView() {
           className="rounded p-1 text-gray-400 hover:text-white hover:bg-gray-700 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
           aria-label="Abrir menú de navegación"
           aria-haspopup="dialog"
+          aria-controls="timer-view-menu"
           aria-expanded={showMenu}
         >
           {/* Hamburger icon */}
@@ -188,7 +166,7 @@ export function TimerView() {
       </header>
 
       {/* Navigation drawer — all users */}
-      <TimerMenu isOpen={showMenu} onClose={() => setShowMenu(false)} />
+      <TimerMenu id="timer-view-menu" isOpen={showMenu} onClose={() => setShowMenu(false)} />
 
       {/* Main timer display */}
       <section className="flex-1 flex flex-col items-center justify-center gap-8 px-4">
@@ -200,10 +178,13 @@ export function TimerView() {
 
         <Tiempo remainingSeconds={remainingSeconds} totalSeconds={totalSeconds} />
 
-        {calculatedTimerId === null && idSalaActiva !== null && (
+        {isTimerDataLoading && idSalaActiva !== null && (
+          <div className="h-4 w-40 bg-gray-700 animate-pulse rounded" aria-hidden="true" />
+        )}
+        {!isTimerDataLoading && calculatedTimerId === null && idSalaActiva !== null && (
           <p className="text-gray-500 text-sm">Sin eventos en este momento</p>
         )}
-        {calculatedTimerId !== null && !currentEmpresaNombre && idSalaActiva !== null && (
+        {!isTimerDataLoading && calculatedTimerId !== null && !currentEmpresaNombre && idSalaActiva !== null && (
           <p className="text-gray-500 text-sm">Sin empresa activa en esta sala</p>
         )}
       </section>

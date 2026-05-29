@@ -77,12 +77,23 @@ export function Empresas() {
       confirmButtonText: 'Eliminar',
       cancelButtonText: 'Cancelar',
       confirmButtonColor: '#dc2626',
+      ...(tesIds.length > 0 && {
+        footer: '<small>Esta operación no es atómica. Un fallo parcial puede requerir corrección manual.</small>',
+      }),
     });
     if (!result.isConfirmed) return;
 
     deleteEmpresa.mutate(
       { idEmpresa, tesIds },
-      { onError: () => void Swal.fire('Error', 'No se pudo eliminar la empresa.', 'error') }
+      {
+        onError: () => void Swal.fire(
+          'Error',
+          tesIds.length > 0
+            ? 'El proceso falló a mitad. Algunas asignaciones pueden haber sido eliminadas pero la empresa permanece. Revisa el estado manualmente antes de reintentar.'
+            : 'No se pudo eliminar la empresa.',
+          'error'
+        ),
+      }
     );
   }
 

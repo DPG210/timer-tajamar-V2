@@ -75,10 +75,6 @@ export function Categorias() {
       void Swal.fire('Nombre duplicado', 'Ya existe una categoría con ese nombre.', 'warning');
       return;
     }
-    if (checkOverlapForDuration(duracionMinutos)) {
-      void Swal.fire('Solapamiento', 'Esta duración causaría solapamiento entre timers.', 'warning');
-      return;
-    }
 
     createCategoria.mutate(
       { categoria: nombre, duracion: duracionMinutos },
@@ -134,12 +130,19 @@ export function Categorias() {
       confirmButtonText: 'Eliminar todo',
       cancelButtonText: 'Cancelar',
       confirmButtonColor: '#dc2626',
+      footer: '<small>Esta operación no es atómica. Un fallo parcial puede requerir corrección manual.</small>',
     });
     if (!result.isConfirmed) return;
 
     deleteCategoria.mutate(
       { idCategoria, timerIds, tesIds },
-      { onError: () => void Swal.fire('Error', 'No se pudo eliminar la categoría.', 'error') }
+      {
+        onError: () => void Swal.fire(
+          'Error',
+          'El proceso falló a mitad. Algunos temporizadores o asignaciones pueden haber sido eliminados pero la categoría permanece. Revisa el estado manualmente antes de reintentar.',
+          'error'
+        ),
+      }
     );
   }
 

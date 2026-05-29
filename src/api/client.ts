@@ -45,9 +45,10 @@ apiClient.interceptors.response.use(
       const url = error.config?.url ?? '';
       // Skip redirect for the login endpoint itself — a 401 there means wrong
       // credentials, not an expired session. The Login component handles it via onError.
-      if (!url.includes('Auth/Login')) {
+      if (!url.endsWith('Auth/Login')) {
         useAuthStore.getState().clearToken();
-        window.location.href = '/login';
+        const next = encodeURIComponent(window.location.pathname + window.location.search);
+        window.location.replace(`/login?next=${next}`);
       }
     }
     return Promise.reject(error);

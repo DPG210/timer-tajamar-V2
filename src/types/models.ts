@@ -133,7 +133,7 @@ export const EventoActualSchema = z.object({
   inicioTimer: z.string(),
   idCategoria: z.number().int().positive(),
   duracion: z.number().int().positive(),
-  imagenEmpresa: z.string(),
+  imagenEmpresa: z.string().optional(),
 });
 
 export type EventoActual = z.infer<typeof EventoActualSchema>;

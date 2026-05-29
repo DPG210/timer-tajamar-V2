@@ -1,10 +1,8 @@
 import { useState } from 'react';
 import Swal from 'sweetalert2';
 import { useQueryClient } from '@tanstack/react-query';
-import { useEmpresasTimers, useEventosActualesEmpresa, eventosActualesEmpresaKey } from '../../hooks/useTimerEventos';
+import { useEmpresasTimers, useEventosActualesEmpresa, fetchEventosActualesEmpresa } from '../../hooks/useTimerEventos';
 import { formatInicio, calcularFin } from '../../utils/time';
-import { apiClient } from '../../api/client';
-import { EventoActualArraySchema } from '../../types/models';
 import type { Empresa } from '../../types/models';
 
 function EmpresaCard({ empresa, onClick }: { empresa: Empresa; onClick: () => void }) {
@@ -57,16 +55,7 @@ export function EmpresasEventoTimersNew() {
     setActiveEmpresaId(empresa.idEmpresa);
 
     // Pre-fetch data (uses cache if fresh) BEFORE opening Swal — no "Cargando…" needed.
-    const eventosData = await queryClient.fetchQuery({
-      queryKey: eventosActualesEmpresaKey(empresa.idEmpresa),
-      queryFn: async () => {
-        const { data } = await apiClient.get<unknown>(
-          `api/timereventos/eventosactualesempresa/${empresa.idEmpresa}`
-        );
-        return EventoActualArraySchema.parse(data);
-      },
-      staleTime: 5_000,
-    });
+    const eventosData = await fetchEventosActualesEmpresa(queryClient, empresa.idEmpresa);
 
     await Swal.fire({
       title: empresa.nombreEmpresa,
@@ -121,7 +110,7 @@ export function EmpresasEventoTimersNew() {
               </thead>
               <tbody className="divide-y divide-gray-50 dark:divide-gray-700">
                 {eventos.map((ev, i) => (
-                  <tr key={i}>
+                  <tr key={`${ev.sala}-${ev.inicioTimer}-${i}`}>
                     <td className="py-2 text-gray-700 dark:text-gray-200">{ev.sala}</td>
                     <td className="py-2 text-gray-700 dark:text-gray-200">{formatInicio(ev.inicioTimer)}</td>
                     <td className="py-2 text-gray-500 dark:text-gray-400">{calcularFin(ev.inicioTimer, ev.duracion)}</td>

@@ -28,7 +28,6 @@ export function useCategorias() {
       return CategoriaArraySchema.parse(data);
     },
     staleTime: 30_000,
-    refetchInterval: 60_000,
   });
 }
 

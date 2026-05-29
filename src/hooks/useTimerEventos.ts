@@ -2,7 +2,7 @@
  * TanStack Query hooks for TimerEventos (read-only projection endpoints).
  */
 
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, type QueryClient } from '@tanstack/react-query';
 import { apiClient } from '../api/client';
 import { EmpresaArraySchema, EventoActualArraySchema } from '../types/models';
 
@@ -60,6 +60,24 @@ export function useEventosActualesEmpresa(idEmpresa: number | null) {
       return EventoActualArraySchema.parse(data);
     },
     enabled: idEmpresa !== null,
+    staleTime: 5_000,
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Shared fetch helper — used by both useEventosActualesEmpresa and
+// EmpresasEventoTimersNew.handleEmpresaClick to avoid duplicating the queryFn.
+// ---------------------------------------------------------------------------
+
+export function fetchEventosActualesEmpresa(queryClient: QueryClient, idEmpresa: number) {
+  return queryClient.fetchQuery({
+    queryKey: eventosActualesEmpresaKey(idEmpresa),
+    queryFn: async () => {
+      const { data } = await apiClient.get<unknown>(
+        `api/timereventos/eventosactualesempresa/${idEmpresa}`
+      );
+      return EventoActualArraySchema.parse(data);
+    },
     staleTime: 5_000,
   });
 }

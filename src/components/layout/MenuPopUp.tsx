@@ -3,14 +3,54 @@
  * Migrated from MenuPopUp.js (class component).
  */
 
+import { useEffect, useRef } from 'react';
 import { Menu } from './Menu';
 
 interface MenuPopUpProps {
   isOpen: boolean;
   onClose: () => void;
+  /** Stable id forwarded from the hamburger button's aria-controls (L-05). */
+  id?: string;
 }
 
-export function MenuPopUp({ isOpen, onClose }: MenuPopUpProps) {
+export function MenuPopUp({ isOpen, onClose, id }: MenuPopUpProps) {
+  const drawerRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const el = drawerRef.current;
+    if (!el) return;
+
+    const focusable = el.querySelectorAll<HTMLElement>(
+      'button:not([disabled]), [href], input:not([disabled]), [tabindex]:not([tabindex="-1"])'
+    );
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    first?.focus();
+
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape') {
+        onClose();
+        return;
+      }
+      if (e.key !== 'Tab' || !focusable.length) return;
+      if (e.shiftKey) {
+        if (document.activeElement === first) {
+          e.preventDefault();
+          last?.focus();
+        }
+      } else {
+        if (document.activeElement === last) {
+          e.preventDefault();
+          first?.focus();
+        }
+      }
+    }
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
 
   return (
@@ -23,6 +63,8 @@ export function MenuPopUp({ isOpen, onClose }: MenuPopUpProps) {
       />
       {/* Drawer */}
       <aside
+        ref={drawerRef}
+        id={id}
         role="dialog"
         aria-modal="true"
         aria-label="Menú de navegación"

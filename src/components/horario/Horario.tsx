@@ -28,7 +28,7 @@ export function Horario() {
   const { data: tesList = [] } = useTES();
   const createTES = useCreateTES();
   const deleteTES = useDeleteTES();
-  const isAuthenticated = useAuthStore((s) => s.isAuthenticated());
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
 
   const [openSalaId, setOpenSalaId] = useState<number | null>(null);
   const [selectedEmpresaMap, setSelectedEmpresaMap] = useState<Record<string, number>>({});
@@ -43,7 +43,7 @@ export function Horario() {
     setOpenSalaId((prev) => (prev === idSala ? null : idSala));
   }
 
-  async function handleAssign(idTimer: number, idSala: number) {
+  function handleAssign(idTimer: number, idSala: number) {
     const key = getCellKey(idTimer, idSala);
     const idEmpresa = selectedEmpresaMap[key];
     if (!idEmpresa) return;

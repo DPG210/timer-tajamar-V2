@@ -13,16 +13,9 @@ const TOKEN_KEY = 'token';
 
 interface AuthState {
   token: string | null;
-  /** Store token in memory and persist to localStorage. */
+  isAuthenticated: boolean;
   setToken: (token: string) => void;
-  /** Remove token from memory and from localStorage (only the token key). */
   clearToken: () => void;
-  /**
-   * Returns true only if a non-empty, non-"undefined" token exists.
-   * The original code stored the string "undefined" when the promise
-   * didn't resolve correctly — this guard prevents that.
-   */
-  isAuthenticated: () => boolean;
 }
 
 function readStoredToken(): string | null {
@@ -31,23 +24,24 @@ function readStoredToken(): string | null {
   return stored;
 }
 
-export const useAuthStore = create<AuthState>()((set, get) => ({
-  // Hydrate from localStorage on initialization
+// Validates basic JWT structure: 3 Base64 parts separated by dots.
+// Catches obviously malformed tokens before the first API call returns 401.
+function isValidToken(token: string | null): boolean {
+  if (!token) return false;
+  return token.split('.').length === 3;
+}
+
+export const useAuthStore = create<AuthState>()((set) => ({
   token: readStoredToken(),
+  isAuthenticated: isValidToken(readStoredToken()),
 
   setToken: (token: string) => {
     localStorage.setItem(TOKEN_KEY, token);
-    set({ token });
+    set({ token, isAuthenticated: isValidToken(token) });
   },
 
   clearToken: () => {
-    // Only remove the token key — do not clear() the entire localStorage (M-auth fix)
     localStorage.removeItem(TOKEN_KEY);
-    set({ token: null });
-  },
-
-  isAuthenticated: () => {
-    const { token } = get();
-    return token !== null && token !== 'undefined' && token.length > 0;
+    set({ token: null, isAuthenticated: false });
   },
 }));

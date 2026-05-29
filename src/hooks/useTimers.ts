@@ -28,8 +28,7 @@ export function useTimers() {
       // Sort by inicio ascending (same as original Horario.js and Temporizadores.js)
       return [...timers].sort((a, b) => a.inicio.localeCompare(b.inicio));
     },
-    staleTime: 0,
-    refetchInterval: 60_000,
+    staleTime: 30_000,
   });
 }
 

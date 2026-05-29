@@ -79,7 +79,7 @@ export function EmpresasEventoTimers() {
                 <h3 className="text-xs font-medium text-gray-400 uppercase mb-2">Actuales y próximos</h3>
                 <div className="space-y-2">
                   {eventosActuales.map((ev, i) => (
-                    <div key={i} className="bg-blue-50 border border-blue-100 rounded-lg p-3 dark:bg-blue-900/20 dark:border-blue-800">
+                    <div key={`${ev.sala}-${ev.inicioTimer}-${i}`} className="bg-blue-50 border border-blue-100 rounded-lg p-3 dark:bg-blue-900/20 dark:border-blue-800">
                       <p className="font-medium text-blue-800 dark:text-blue-200 text-sm">{ev.sala}</p>
                       <p className="text-blue-600 dark:text-blue-300 text-xs">
                         {formatInicio(ev.inicioTimer)} – {calcularFin(ev.inicioTimer, ev.duracion)}
@@ -104,7 +104,7 @@ export function EmpresasEventoTimers() {
                   </thead>
                   <tbody className="divide-y divide-gray-50 dark:divide-gray-700">
                     {todosEventos.map((ev, i) => (
-                      <tr key={i}>
+                      <tr key={`${ev.sala}-${ev.inicioTimer}-${i}`}>
                         <td className="py-1.5 text-gray-700 dark:text-gray-200">{ev.sala}</td>
                         <td className="py-1.5 text-gray-700 dark:text-gray-200">{formatInicio(ev.inicioTimer)}</td>
                         {/* Fixed: use ev.duracion directly (original used this.state.categorias which was never loaded) */}

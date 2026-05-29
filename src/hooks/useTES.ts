@@ -89,17 +89,6 @@ export function getEmpresaForActiveTimer(
 }
 
 /**
- * Get the company assigned to a timer in a sala ("line name" in the original).
- */
-export function getLineEmpresaId(
-  tesList: TES[],
-  idTimer: number,
-  idSala: number
-): number | null {
-  return findTESForTimerInSala(tesList, idTimer, idSala)?.idEmpresa ?? null;
-}
-
-/**
  * Check whether a (timer, sala) combination already has a TES assignment.
  * Used for the uniqueness check before creating a new TES.
  */

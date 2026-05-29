@@ -31,7 +31,8 @@ export function Temporizadores() {
   const today = todayMadrid();
   const [newDate, setNewDate] = useState(today);
   const [newTime, setNewTime] = useState('09:00');
-  const [newCategoriaId, setNewCategoriaId] = useState<number>(categorias[0]?.idCategoria ?? 0);
+  const [newCategoriaId, setNewCategoriaId] = useState<number | null>(null);
+  const effectiveCategoriaId = newCategoriaId ?? categorias[0]?.idCategoria ?? null;
   const [editId, setEditId] = useState<number | null>(null);
   const [editDate, setEditDate] = useState('');
   const [editTime, setEditTime] = useState('');
@@ -50,8 +51,8 @@ export function Temporizadores() {
 
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault();
-    const catId = Number(newCategoriaId);
-    const cat = categorias.find((c) => c.idCategoria === catId);
+    if (effectiveCategoriaId === null) return;
+    const cat = categorias.find((c) => c.idCategoria === effectiveCategoriaId);
     if (!cat) return;
     const inicio = buildInicioString(newDate, newTime);
     if (checkOverlap(inicio, cat.duracion)) {
@@ -59,7 +60,7 @@ export function Temporizadores() {
       return;
     }
     createTimer.mutate(
-      { inicio, idCategoria: catId },
+      { inicio, idCategoria: effectiveCategoriaId },
       { onError: () => void Swal.fire('Error', 'No se pudo crear el temporizador.', 'error') }
     );
   }
@@ -102,12 +103,23 @@ export function Temporizadores() {
       confirmButtonText: 'Eliminar',
       cancelButtonText: 'Cancelar',
       confirmButtonColor: '#dc2626',
+      ...(tesIds.length > 0 && {
+        footer: '<small>Esta operación no es atómica. Un fallo parcial puede requerir corrección manual.</small>',
+      }),
     });
     if (!result.isConfirmed) return;
 
     deleteTimer.mutate(
       { idTemporizador, tesIds },
-      { onError: () => void Swal.fire('Error', 'No se pudo eliminar el temporizador.', 'error') }
+      {
+        onError: () => void Swal.fire(
+          'Error',
+          tesIds.length > 0
+            ? 'El proceso falló a mitad. Algunas asignaciones pueden haber sido eliminadas pero el temporizador permanece. Revisa el estado manualmente antes de reintentar.'
+            : 'No se pudo eliminar el temporizador.',
+          'error'
+        ),
+      }
     );
   }
 
@@ -131,7 +143,7 @@ export function Temporizadores() {
         <div>
           <label className="block text-xs text-gray-500 mb-1">Categoría</label>
           <select
-            value={newCategoriaId}
+            value={effectiveCategoriaId ?? ''}
             onChange={(e) => setNewCategoriaId(Number(e.target.value))}
             required
             className="border border-gray-300 dark:border-gray-600 rounded px-2 py-1.5 text-sm dark:bg-gray-700 dark:text-gray-100"
@@ -141,7 +153,7 @@ export function Temporizadores() {
             ))}
           </select>
         </div>
-        <button type="submit" disabled={createTimer.isPending} className="bg-blue-600 text-white rounded-lg px-4 py-2 text-sm font-medium hover:bg-blue-700 disabled:opacity-50">
+        <button type="submit" disabled={createTimer.isPending || effectiveCategoriaId === null} className="bg-blue-600 text-white rounded-lg px-4 py-2 text-sm font-medium hover:bg-blue-700 disabled:opacity-50">
           Añadir
         </button>
       </form>

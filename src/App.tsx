@@ -17,6 +17,7 @@
  */
 
 import { BrowserRouter, Routes, Route } from 'react-router';
+import { useTimerSocket } from './hooks/useTimerSocket';
 import { AppLayout } from './components/layout/AppLayout';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import { Login } from './components/auth/Login';
@@ -30,6 +31,7 @@ import { EmpresasEventoTimers } from './components/eventos/EmpresasEventoTimers'
 import { EmpresasEventoTimersNew } from './components/eventos/EmpresasEventoTimersNew';
 
 export default function App() {
+  useTimerSocket();
   return (
     <BrowserRouter>
       <Routes>

@@ -40,13 +40,11 @@ export function SalaPopUp({ onSelect, onClose }: SalaPopUpProps) {
         )}
 
         {salas && (
-          <ul className="space-y-2" role="listbox">
+          <ul className="space-y-2">
             {salas.map((sala) => (
               <li key={sala.idSala}>
                 <button
                   type="button"
-                  role="option"
-                  aria-selected={false}
                   onClick={() => onSelect(sala)}
                   className="w-full text-left px-4 py-3 rounded-lg border border-gray-200 dark:border-gray-600 hover:bg-blue-50 hover:border-blue-300 dark:hover:bg-blue-900/30 dark:hover:border-blue-500 transition-colors font-medium text-gray-700 dark:text-gray-200"
                 >
