@@ -3,7 +3,7 @@ import Swal from 'sweetalert2';
 import { useQueryClient } from '@tanstack/react-query';
 import { useEmpresasTimers, useEventosActualesEmpresa, fetchEventosActualesEmpresa } from '../../hooks/useTimerEventos';
 import { formatInicio, calcularFin } from '../../utils/time';
-import type { Empresa } from '../../types/models';
+import type { Empresa, EventoActual } from '../../types/models';
 
 function EmpresaCard({ empresa, onClick }: { empresa: Empresa; onClick: () => void }) {
   return (
@@ -18,7 +18,7 @@ function EmpresaCard({ empresa, onClick }: { empresa: Empresa; onClick: () => vo
   );
 }
 
-function buildScheduleHtml(eventos: ReturnType<typeof EventoActualArraySchema.parse>): string {
+function buildScheduleHtml(eventos: EventoActual[]): string {
   if (eventos.length === 0) {
     return '<p style="color:#6b7280;margin:0">Sin eventos actuales o próximos.</p>';
   }
