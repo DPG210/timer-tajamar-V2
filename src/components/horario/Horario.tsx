@@ -134,7 +134,7 @@ export function Horario() {
                         return (
                           <li
                             key={timer.idTemporizador}
-                            className={`flex items-center justify-between gap-3 px-4 py-3 ${
+                            className={`flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3 px-4 py-3 ${
                               index < timers.length - 1 ? 'border-b border-gray-800' : ''
                             }`}
                           >
@@ -174,7 +174,7 @@ export function Horario() {
                                         [key]: Number(e.target.value),
                                       }))
                                     }
-                                    className="text-xs bg-gray-800 border border-gray-600 rounded px-2 py-1 text-gray-200 focus:outline-none focus:border-blue-500"
+                                    className="text-xs bg-gray-800 border border-gray-600 rounded px-2 py-1 text-gray-200 focus:outline-none focus:border-blue-500 w-full sm:w-auto"
                                     aria-label={`Seleccionar empresa para ${sala.nombreSala} a las ${formatInicio(timer.inicio)}`}
                                   >
                                     <option value="">— empresa —</option>

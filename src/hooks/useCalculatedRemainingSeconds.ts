@@ -102,12 +102,22 @@ export function useCalculatedRemainingSeconds({
       return;
     }
 
-    const intervalId = setInterval(() => {
+    // Align the interval to the next real second boundary so all browser
+    // windows fire at approximately the same wall-clock millisecond,
+    // eliminating the visual phase misalignment between clients.
+    let intervalId: ReturnType<typeof setInterval> | null = null;
+
+    const msToNextSecond = 1000 - (Date.now() % 1000);
+    const timeoutId = setTimeout(() => {
       setRemainingSeconds(calculate(activeTimerId, timers, categorias));
-    }, 1000);
+      intervalId = setInterval(() => {
+        setRemainingSeconds(calculate(activeTimerId, timers, categorias));
+      }, 1000);
+    }, msToNextSecond);
 
     return () => {
-      clearInterval(intervalId);
+      clearTimeout(timeoutId);
+      if (intervalId !== null) clearInterval(intervalId);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTimerId, timers, categorias]);
