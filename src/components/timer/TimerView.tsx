@@ -32,7 +32,7 @@ import { Tiempo } from './Tiempo';
 import { SalaPopUp } from './SalaPopUp';
 import { TimerMenu } from './TimerMenu';
 import type { Sala } from '../../types/models';
-import { formatInicio, calcularFin } from '../../utils/time';
+import { formatInicio, calcularFin, parseInicio } from '../../utils/time';
 import logoTajamarTech from '../../assets/logo-tajamar-tech.png';
 
 export function TimerView() {
@@ -88,20 +88,39 @@ export function TimerView() {
       : null;
 
   // Find next and after-next timers in this sala
-  const sortedTimers = [...timers];
+  // sortedByTime: all timers ordered by their scheduled inicio (ascending).
+  const sortedByTime = [...timers].sort((a, b) => {
+    const pa = parseInicio(a.inicio);
+    const pb = parseInicio(b.inicio);
+    return (pa.hours * 60 + pa.minutes) - (pb.hours * 60 + pb.minutes);
+  });
+
   const currentTimerIndex = activeTimerId
-    ? sortedTimers.findIndex((t) => t.idTemporizador === activeTimerId)
+    ? sortedByTime.findIndex((t) => t.idTemporizador === activeTimerId)
     : -1;
 
-  const nextTimer = currentTimerIndex >= 0 ? sortedTimers[currentTimerIndex + 1] : null;
-  const afterNextTimer =
-    currentTimerIndex >= 0 ? sortedTimers[currentTimerIndex + 2] : null;
+  let nextTimer: typeof timers[number] | null = null;
+  let afterNextTimer: typeof timers[number] | null = null;
+
+  if (currentTimerIndex >= 0) {
+    // Active timer exists — take the two immediately following it.
+    nextTimer = sortedByTime[currentTimerIndex + 1] ?? null;
+    afterNextTimer = sortedByTime[currentTimerIndex + 2] ?? null;
+  } else {
+    // No active timer right now — show the next two future events.
+    const nowMinutes = new Date().getHours() * 60 + new Date().getMinutes();
+    const futureTimers = sortedByTime.filter(t => {
+      const { hours, minutes } = parseInicio(t.inicio);
+      return hours * 60 + minutes > nowMinutes;
+    });
+    nextTimer = futureTimers[0] ?? null;
+    afterNextTimer = futureTimers[1] ?? null;
+  }
 
   function getLineInfo(timer: { idTemporizador: number; inicio: string; idCategoria: number } | undefined) {
     if (!timer || idSalaActiva === null) return null;
     const empresaId = getEmpresaForActiveTimer(tesList, timer.idTemporizador, idSalaActiva);
-    if (!empresaId) return null;
-    const nombre = getEmpresaNombre(empresas, empresaId);
+    const nombre = empresaId ? getEmpresaNombre(empresas, empresaId) : '—';
     const categoriaNombre = getCategoriaNombre(categorias, timer.idCategoria);
     const categoria = categorias.find((c) => c.idCategoria === timer.idCategoria);
     const fin = categoria ? calcularFin(timer.inicio, categoria.duracion) : '??:??';
@@ -114,7 +133,7 @@ export function TimerView() {
   return (
     <main className="relative isolate min-h-screen bg-gray-900 text-white flex flex-col">
       <div
-        className="absolute inset-0 -z-10 bg-center bg-no-repeat bg-contain opacity-[0.75] pointer-events-none"
+        className="absolute inset-0 -z-10 bg-center bg-no-repeat bg-contain opacity-[0.35] pointer-events-none"
         style={{ backgroundImage: `url(${logoTajamarTech})` }}
         aria-hidden="true"
       />
@@ -182,10 +201,10 @@ export function TimerView() {
           <div className="h-4 w-40 bg-gray-700 animate-pulse rounded" aria-hidden="true" />
         )}
         {!isTimerDataLoading && calculatedTimerId === null && idSalaActiva !== null && (
-          <p className="text-gray-500 text-sm">Sin eventos en este momento</p>
+          <p className="text-white text-xl">Sin eventos en este momento</p>
         )}
         {!isTimerDataLoading && calculatedTimerId !== null && !currentEmpresaNombre && idSalaActiva !== null && (
-          <p className="text-gray-500 text-sm">Sin empresa activa en esta sala</p>
+          <p className="text-white text-xl">Sin empresa activa en esta sala</p>
         )}
       </section>
 

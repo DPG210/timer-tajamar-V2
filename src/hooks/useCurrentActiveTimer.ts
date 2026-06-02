@@ -16,39 +16,57 @@
  * automatically.
  */
 
-import { useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { useTimers } from './useTimers';
 import { useCategorias } from './useCategorias';
 import { parseInicio } from '../utils/time';
 import { nowMadridMinutes } from '../utils/timezone';
+import type { Temporizador, Categoria } from '../types/models';
 
 export function useCurrentActiveTimer(): number | null {
   const { data: timers = [] } = useTimers();
   const { data: categorias = [] } = useCategorias();
 
-  return useMemo(() => {
-    // Minutes elapsed since midnight in Europe/Madrid — explicit timezone,
-    // immune to browser OS clock offset.
-    const nowMinutes = nowMadridMinutes();
+  const [activeId, setActiveId] = useState<number | null>(() => compute(timers, categorias));
 
-    for (const timer of timers) {
-      const categoria = categorias.find((c) => c.idCategoria === timer.idCategoria);
-      if (!categoria) continue;
+  useEffect(() => {
+    // Recalculate immediately when data changes
+    setActiveId(compute(timers, categorias));
 
-      const { hours, minutes } = parseInicio(timer.inicio);
-      const startMinutes = hours * 60 + minutes;
-      const endMinutes = startMinutes + categoria.duracion;
+    // Then align next tick to the next full minute boundary
+    const msToNextMinute = 60_000 - (Date.now() % 60_000);
+    let intervalId: ReturnType<typeof setInterval> | null = null;
 
-      const MINUTES_IN_DAY = 1440;
-      const crossesMidnight = endMinutes > MINUTES_IN_DAY;
-      const isActive = crossesMidnight
-        ? nowMinutes >= startMinutes || nowMinutes < endMinutes - MINUTES_IN_DAY
-        : nowMinutes >= startMinutes && nowMinutes < endMinutes;
+    const timeoutId = setTimeout(() => {
+      setActiveId(compute(timers, categorias));
+      intervalId = setInterval(() => {
+        setActiveId(compute(timers, categorias));
+      }, 60_000);
+    }, msToNextMinute);
 
-      if (isActive) {
-        return timer.idTemporizador;
-      }
-    }
-    return null;
+    return () => {
+      clearTimeout(timeoutId);
+      if (intervalId !== null) clearInterval(intervalId);
+    };
   }, [timers, categorias]);
+
+  return activeId;
+}
+
+function compute(timers: Temporizador[], categorias: Categoria[]): number | null {
+  const nowMinutes = nowMadridMinutes();
+  for (const timer of timers) {
+    const categoria = categorias.find((c) => c.idCategoria === timer.idCategoria);
+    if (!categoria) continue;
+    const { hours, minutes } = parseInicio(timer.inicio);
+    const startMinutes = hours * 60 + minutes;
+    const endMinutes = startMinutes + categoria.duracion;
+    const MINUTES_IN_DAY = 1440;
+    const crossesMidnight = endMinutes > MINUTES_IN_DAY;
+    const isActive = crossesMidnight
+      ? nowMinutes >= startMinutes || nowMinutes < endMinutes - MINUTES_IN_DAY
+      : nowMinutes >= startMinutes && nowMinutes < endMinutes;
+    if (isActive) return timer.idTemporizador;
+  }
+  return null;
 }

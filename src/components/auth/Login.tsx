@@ -18,7 +18,6 @@ import Swal from 'sweetalert2';
 import axios from 'axios';
 import { useLogin } from '../../hooks/useAuth';
 import { useAuthStore } from '../../stores/authStore';
-import { socket } from '../../socket';
 import { TimerMenu } from '../timer/TimerMenu';
 import { DarkToggle } from '../layout/DarkToggle';
 
@@ -68,20 +67,6 @@ export function Login() {
   function handleSignOut() {
     clearToken(); // only removes "token" key (M-auth fix)
     void navigate('/login');
-  }
-
-  async function handleStartEvent() {
-    const result = await Swal.fire({
-      title: '¿Iniciar evento?',
-      text: 'Se iniciará la cuenta atrás de los temporizadores.',
-      icon: 'question',
-      showCancelButton: true,
-      confirmButtonText: 'Sí, iniciar',
-      cancelButtonText: 'Cancelar',
-    });
-    if (result.isConfirmed) {
-      socket.emit('vamos');
-    }
   }
 
   return (
@@ -159,14 +144,6 @@ export function Login() {
         ) : (
           <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-8 space-y-4 text-center">
             <p className="text-gray-700 dark:text-gray-200">Sesión activa</p>
-
-            <button
-              type="button"
-              onClick={() => void handleStartEvent()}
-              className="w-full bg-green-600 text-white rounded-lg py-2 font-medium hover:bg-green-700 transition-colors"
-            >
-              Iniciar evento
-            </button>
 
             <button
               type="button"
