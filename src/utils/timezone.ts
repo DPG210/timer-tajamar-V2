@@ -95,8 +95,9 @@ function getMadridParts(date: Date): {
  *   nowMadridMinutes() // => 630.75
  */
 export function nowMadridMinutes(): number {
-  const { hours, minutes, seconds } = getMadridParts(new Date());
-  return hours * 60 + minutes + seconds / 60;
+  const now = new Date();
+  const { hours, minutes } = getMadridParts(now);
+  return hours * 60 + minutes + now.getSeconds() / 60;
 }
 
 /**

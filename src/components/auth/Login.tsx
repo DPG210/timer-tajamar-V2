@@ -17,6 +17,7 @@ import { useNavigate, useSearchParams } from 'react-router';
 import Swal from 'sweetalert2';
 import axios from 'axios';
 import { useLogin } from '../../hooks/useAuth';
+import { useIncreaseTimers } from '../../hooks/useTimers';
 import { useAuthStore } from '../../stores/authStore';
 import { TimerMenu } from '../timer/TimerMenu';
 import { DarkToggle } from '../layout/DarkToggle';
@@ -28,6 +29,9 @@ export function Login() {
   const [searchParams] = useSearchParams();
   const { mutate: login, isPending } = useLogin();
   const { isAuthenticated: authenticated, clearToken } = useAuthStore();
+
+  const adjustSchedule = useIncreaseTimers();
+  const [adjustMinutes, setAdjustMinutes] = useState(5);
 
   const [userName, setUserName] = useState('');
   const [password, setPassword] = useState('');
@@ -62,6 +66,24 @@ export function Login() {
         },
       }
     );
+  }
+
+  async function handleAdjust(delta: number) {
+    const action = delta > 0 ? 'adelantar' : 'retrasar';
+    const abs = Math.abs(delta);
+    const result = await Swal.fire({
+      title: `¿${delta > 0 ? 'Adelantar' : 'Retrasar'} el horario?`,
+      text: `Todos los temporizadores se ${action}án ${abs} minuto${abs !== 1 ? 's' : ''}.`,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Confirmar',
+      cancelButtonText: 'Cancelar',
+    });
+    if (!result.isConfirmed) return;
+    adjustSchedule.mutate(delta, {
+      onSuccess: () => void Swal.fire('Hecho', `Horario ${action}do ${abs} min.`, 'success'),
+      onError: () => void Swal.fire('Error', 'No se pudo ajustar el horario.', 'error'),
+    });
   }
 
   function handleSignOut() {
@@ -142,8 +164,42 @@ export function Login() {
             </button>
           </form>
         ) : (
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-8 space-y-4 text-center">
-            <p className="text-gray-700 dark:text-gray-200">Sesión activa</p>
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-8 space-y-4">
+            <p className="text-gray-700 dark:text-gray-200 text-center font-medium">Sesión activa</p>
+
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">
+                Ajustar horario
+              </label>
+              <div className="flex items-center gap-2">
+                <input
+                  type="number"
+                  min={1}
+                  max={60}
+                  value={adjustMinutes}
+                  onChange={(e) => setAdjustMinutes(Math.max(1, parseInt(e.target.value) || 1))}
+                  className="w-20 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm text-center dark:bg-gray-700 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  disabled={adjustSchedule.isPending}
+                />
+                <span className="text-sm text-gray-500 dark:text-gray-400">min</span>
+                <button
+                  type="button"
+                  onClick={() => void handleAdjust(adjustMinutes)}
+                  disabled={adjustSchedule.isPending}
+                  className="flex-1 bg-amber-500 text-white rounded-lg py-2 text-sm font-medium hover:bg-amber-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  ◀ Retrasar
+                </button>
+                <button
+                  type="button"
+                  onClick={() => void handleAdjust(-adjustMinutes)}
+                  disabled={adjustSchedule.isPending}
+                  className="flex-1 bg-blue-600 text-white rounded-lg py-2 text-sm font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  Adelantar ▶
+                </button>
+              </div>
+            </div>
 
             <button
               type="button"
