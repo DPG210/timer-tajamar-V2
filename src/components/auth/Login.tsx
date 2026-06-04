@@ -13,7 +13,7 @@
  */
 
 import { useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router';
+import { useNavigate } from 'react-router';
 import Swal from 'sweetalert2';
 import axios from 'axios';
 import { useLogin } from '../../hooks/useAuth';
@@ -26,7 +26,6 @@ const LOGIN_TIMER_MENU_ID = 'login-timer-menu';
 
 export function Login() {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
   const { mutate: login, isPending } = useLogin();
   const { isAuthenticated: authenticated, clearToken } = useAuthStore();
 
@@ -42,10 +41,6 @@ export function Login() {
     login(
       { userName, password },
       {
-        onSuccess: () => {
-          const next = searchParams.get('next') ?? '/horario';
-          void navigate(next);
-        },
         onError: (error) => {
           // M-08: Swal in component, not in service
           if (axios.isAxiosError(error) && error.response?.status === 401) {
@@ -69,10 +64,10 @@ export function Login() {
   }
 
   async function handleAdjust(delta: number) {
-    const action = delta > 0 ? 'adelantar' : 'retrasar';
+    const action = delta > 0 ? 'retrasar' : 'adelantar';
     const abs = Math.abs(delta);
     const result = await Swal.fire({
-      title: `¿${delta > 0 ? 'Adelantar' : 'Retrasar'} el horario?`,
+      title: `¿${delta > 0 ? 'Retrasar' : 'Adelantar'} el horario?`,
       text: `Todos los temporizadores se ${action}án ${abs} minuto${abs !== 1 ? 's' : ''}.`,
       icon: 'question',
       showCancelButton: true,
