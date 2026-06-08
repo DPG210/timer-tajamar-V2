@@ -32,8 +32,8 @@ Reconstruir el frontend con:
 
 **Positivas:**
 - TypeScript strict elimina la clase de bugs de acceso a propiedades undefined.
-- TanStack Query gestiona loading/error/success sin boilerplate manual; resuelve M-02.
-- Zustand es tree-shakeable y no requiere Provider en el árbol React para leer el store; simplifica el acceso al token desde el interceptor axios.
+- al; resuelve M-02.
+- Zustand es tree-shakeable y no requiere Provider en el árbol React para leer el store; simplifica el aTanStack Query gestiona loading/error/success sin boilerplate manucceso al token desde el interceptor axios.
 - Vite HMR es más rápido que CRA para el ciclo de desarrollo.
 
 **Negativas:**

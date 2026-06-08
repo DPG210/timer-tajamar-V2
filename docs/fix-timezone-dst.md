@@ -1,8 +1,9 @@
-# Fix: Timezone y DST (Europe/Madrid)
+# Zona horaria y DST (Europe/Madrid)
 
-**Fecha:** 2026-05-25
-**Afecta:** `src/views/TemporizadoresView.tsx:20`
-**Prioridad:** Alta — aplicar antes de v1
+**Última actualización:** 2026-06-08
+**Implementación:** `src/utils/timezone.ts`
+**Tests:** `src/utils/timezone.test.ts`
+**Estado:** Resuelto
 
 ---
 
@@ -10,75 +11,72 @@
 
 España cambia de hora dos veces al año:
 
-- **Último domingo de marzo** — relojes avanzan de 02:00 a 03:00 (UTC+1 → UTC+2)
-- **Último domingo de octubre** — relojes retroceden de 03:00 a 02:00 (UTC+2 → UTC+1)
+- **Último domingo de marzo** — los relojes avanzan de 02:00 a 03:00 (CET UTC+1 → CEST UTC+2)
+- **Último domingo de octubre** — los relojes retroceden de 03:00 a 02:00 (CEST UTC+2 → CET UTC+1)
 
-Luxon con zona `Europe/Madrid` gestiona el cambio automáticamente en todas las rutas del código, **excepto** el bug documentado abajo.
+El problema original: el código calculaba la hora con `new Date().getHours()`, que devuelve la hora del **reloj del sistema operativo del navegador**. Eso es casi siempre correcto en las terminales del laboratorio en España, pero no está garantizado: una VM, un contenedor Docker, un runner de CI o un usuario que haya cambiado su reloj pueden producir un offset distinto.
 
 ---
 
-## Lo que ya funciona (no tocar)
+## Solución
 
-| Función | Código | ¿DST correcto? |
+Toda la lógica de tiempo sensible a la zona horaria está centralizada en `src/utils/timezone.ts`. La zona se fija explícitamente a `Europe/Madrid` mediante `Intl.DateTimeFormat`, que se apoya en la base de datos IANA (tzdata) incluida en el motor del navegador (V8, SpiderMonkey, WebKit). Las transiciones de DST (CET↔CEST) se gestionan **automáticamente**, sin añadir ninguna dependencia externa.
+
+### Decisiones de diseño
+
+1. Se usa `Intl.DateTimeFormat` con `timeZone: 'Europe/Madrid'` en lugar del reloj del SO, para que el resultado no dependa de la configuración de la máquina cliente.
+2. Se evita `Date.prototype.toLocaleString` para lógica, porque su formato de salida depende del locale y no es fiable para parsear.
+3. Se usa `formatToParts` para extracción legible por máquina. Disponible en Chrome 57+, Firefox 51+ y Safari 11+ (cualquier Chrome moderno de las terminales del laboratorio lo soporta).
+4. El formatter es un **singleton** — crear instancias de `DateTimeFormat` es costoso, así que se reutiliza.
+
+### API pública
+
+| Función | Devuelve | Reemplaza a |
 |---|---|---|
-| `ahora()` | `DateTime.now().setZone(TIMEZONE)` | Sí — instante UTC + offset correcto |
-| `parseTimerInicio()` | `DateTime.fromISO(iso, { zone: TIMEZONE })` | Sí |
-| `timerYaPaso()` | Compara instantes UTC absolutos | Sí |
-| Countdown Socket.IO (`envio`) | Servidor emite segundos restantes en UTC | Inmune — el cliente solo muestra el número |
+| `nowMadridMinutes()` | Minutos transcurridos desde medianoche en Madrid (con segundos como fracción) | `now.getHours() * 60 + now.getMinutes() + now.getSeconds() / 60` |
+| `todayMadrid()` | Fecha de hoy en Madrid como `"YYYY-MM-DD"` | `toLocaleDateString('en-CA')` / `toISOString().slice(0,10)` (ambos incorrectos) |
+| `nowMadridHHMM()` | `{ hours, minutes }` en Madrid | — (expuesto para depuración y tests) |
+
+`todayMadrid()` es seguro al cruzar medianoche y en transiciones de DST: usa la fecha de pared (wallclock) de Madrid, no la fecha UTC.
 
 ---
 
-## Bug a corregir
+## Qué consume estos helpers
 
-**Archivo:** `src/views/TemporizadoresView.tsx`, línea 20
-
-```typescript
-// ANTES (bug) — parsea en timezone del navegador, no en Europe/Madrid
-function esFechaFutura(value: string): boolean {
-  return DateTime.fromISO(value) > ahora()
-}
-
-// DESPUÉS (fix) — una línea
-function esFechaFutura(value: string): boolean {
-  return DateTime.fromISO(value, { zone: TIMEZONE }) > ahora()
-}
-```
-
-**Impacto del bug:** hasta ±2h de error en la validación de fecha futura para usuarios cuyo navegador esté en una zona distinta de Europe/Madrid, o exactamente ±1h durante las noches de cambio de hora.
+- `src/components/admin/Temporizadores.tsx` → usa `todayMadrid()`
+- `src/hooks/useCalculatedRemainingSeconds.ts` → usa `nowMadridMinutes()`
+- `src/hooks/useCurrentActiveTimer.ts` → usa `nowMadridMinutes()`
+- `src/utils/time.ts` (`parseInicio`) → solo hace split de strings, sin lógica de zona horaria; el llamador es responsable de comparar contra `nowMadridMinutes()`
 
 ---
 
-## Edge cases conocidos (deuda UX — no bloqueante v1)
+## Cobertura de tests
 
-### Hora fantasma (spring forward)
+`src/utils/timezone.test.ts` verifica la salida en hora de Madrid (no UTC), fijando el reloj con fechas de referencia conocidas:
 
-Timer creado con `inicio = 2025-03-30T02:30` — esa hora no existe.
-
-- Luxon la desplaza silenciosamente al instante UTC más cercano
-- El timer se crea sin error, pero se activa a una hora distinta de la esperada
-- **Acción v2:** mostrar aviso al usuario si la hora introducida cae en el hueco DST
-
-### Hora ambigua (fall back)
-
-Timer creado con `inicio = 2025-10-26T02:30` — esa hora existe dos veces.
-
-- Luxon elige la primera ocurrencia (CEST, +02:00) sin preguntar
-- El timer puede activarse 1h antes de lo esperado
-- **Acción v2:** preguntar al usuario qué ocurrencia quiere, o forzar siempre la primera
+- **Invierno (CET, UTC+1):** 10:30, 00:00, 23:59:59 y segundos como fracción
+- **Verano (CEST, UTC+2):** 10:30, 00:00, 23:00
+- **Spring-forward (2024-03-31):** lee 01:59 CET antes del salto, 03:00 CEST justo después, y confirma que la hora fantasma 02:30 no existe (el reloj salta 61 min)
+- **Fall-back (2024-10-27):** verifica las dos pasadas por las 02:xx
 
 ---
 
-## Pregunta pendiente de verificar
+## Edge cases de DST (documentados, no manejados en código)
 
-¿El servidor devuelve `inicio` con offset explícito (ej. `2025-03-30T01:30:00Z`) o sin él (ej. `2025-03-30T02:30:00`)?
+### Hora fantasma (spring-forward)
 
-- **Con offset:** el bug de `esFechaFutura` tiene impacto solo potencial (Luxon respeta el offset del string)
-- **Sin offset:** el bug tiene impacto real hoy en cualquier cliente fuera de Europe/Madrid
+El último domingo de marzo, las horas entre 02:00 y 03:00 **no existen** en Europe/Madrid. Un timer programado a las 02:30 se tratará como activo a partir de ~02:00 hora de Madrid (cuando el reloj salta).
+
+### Hora ambigua (fall-back)
+
+El último domingo de octubre, las horas entre 02:00 y 03:00 **ocurren dos veces**. Un timer a las 02:30 aparecerá activo durante ~2× su duración configurada.
+
+**Mitigación actual:** ambos casos son una cuestión administrativa. Afectan como mucho a dos domingos al año y a cero sesiones de laboratorio reales (los labs no se ejecutan a las 02:30 AM). Por eso están fuera del alcance de v2.
+
+**Acción futura (opcional):** avisar al admin si la hora introducida cae en el hueco DST de marzo, o preguntar qué ocurrencia usar en el caso de octubre.
 
 ---
 
-## Checklist de cierre
+## Nota histórica
 
-- [ ] Aplicar fix en `TemporizadoresView.tsx:20`
-- [ ] Verificar formato ISO que devuelve el servidor para `inicio`
-- [ ] Añadir edge cases de hora fantasma y ambigua a `tech-debt.md`
+Una iteración previa de este documento describía una solución basada en **Luxon** (`DateTime.fromISO`, `setZone`) y un bug en `src/views/TemporizadoresView.tsx`. Esa ruta fue descartada: el proyecto **no usa Luxon** y `TemporizadoresView.tsx` no existe. La solución definitiva es la basada en `Intl.DateTimeFormat` descrita arriba.
